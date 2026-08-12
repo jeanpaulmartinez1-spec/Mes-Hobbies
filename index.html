@@ -25,7 +25,9 @@
   .cat-btn .emoji { font-size:1.6em; flex-shrink:0; }
   .cat-btn.active { background:var(--accent); color:#14141f; font-weight:bold; }
   .cat-del-btn { position:absolute; top:-6px; right:-6px; background:#f54242; color:#fff; border:none;
-                 border-radius:50%; width:24px; height:24px; font-size:0.8em; cursor:pointer; }
+                 border-radius:50%; width:24px; height:24px; font-size:0.8em; cursor:pointer; z-index:2; }
+  .cat-edit-btn { position:absolute; top:-6px; left:-6px; background:var(--accent); color:#14141f; border:none;
+                 border-radius:50%; width:24px; height:24px; font-size:0.8em; cursor:pointer; z-index:2; }
   .add-cat-btn { padding:12px 10px; border:2px dashed var(--muted); border-radius:10px; background:transparent; color:var(--muted);
              font-size:0.9em; text-align:center; cursor:pointer; min-height:60px; display:flex; align-items:center; justify-content:center; }
 
@@ -167,6 +169,12 @@ function renderButtons() {
     wrap.appendChild(btn);
 
     if (editMode) {
+      const editBtn = document.createElement('button');
+      editBtn.className = 'cat-edit-btn';
+      editBtn.textContent = '✏️';
+      editBtn.onclick = (e) => { e.stopPropagation(); editCategory(cat.id); };
+      wrap.appendChild(editBtn);
+
       const delBtn = document.createElement('button');
       delBtn.className = 'cat-del-btn';
       delBtn.textContent = '✕';
@@ -194,6 +202,20 @@ function addCategory() {
   saveCategories();
   renderButtons();
   selectCategory(id);
+}
+
+function editCategory(catId) {
+  const cat = categories.find(c => c.id === catId);
+  if (!cat) return;
+  const newLabel = prompt("Modifier le nom de la catégorie :", cat.label);
+  if (newLabel === null) return;
+  const newEmoji = prompt("Modifier l'emoji de la catégorie :", cat.emoji);
+  if (newEmoji === null) return;
+  if (newLabel.trim()) cat.label = newLabel.trim();
+  if (newEmoji.trim()) cat.emoji = newEmoji.trim();
+  saveCategories();
+  renderButtons();
+  if (currentCatId === catId) renderDetails();
 }
 
 function deleteCategory(catId) {
