@@ -93,10 +93,9 @@
       <button class="swatch-red" onclick="highlight('red')">Rouge</button>
       <button class="swatch-green" onclick="highlight('green')">Vert</button>
       <button class="swatch-clear" onclick="clearHighlight()">Effacer</button>
-      <button onclick="stopColor()">⬛ Stop couleur</button>
     </div>
     <div id="notepad" contenteditable="true"></div>
-    <div class="save-status" id="save-status">Astuce : touchez un mot surligné pour retirer sa couleur. Si le texte reste coloré en tapant, appuyez sur "Stop couleur".</div>
+    <div class="save-status" id="save-status">Astuce : touchez un mot surligné pour retirer sa couleur.</div>
   </div>
 
   <div class="drive-section">
@@ -229,10 +228,10 @@ function renderDetails() {
   cat.items.forEach((item, idx) => {
     html += `<li id="item-${idx}">
       <span class="item-text">${escapeHtml(item)}</span>
-      <span class="item-actions">
-        ${editMode ? `<button class="edit-btn" onclick="editItem(${idx})">✏️</button>` : ''}
+      ${editMode ? `<span class="item-actions">
+        <button class="edit-btn" onclick="editItem(${idx})">✏️</button>
         <button class="del-btn" onclick="deleteItem(${idx})">✕</button>
-      </span>
+      </span>` : ''}
     </li>`;
   });
   html += `</ul>`;
@@ -309,6 +308,7 @@ window.addEventListener('load', () => {
 });
 
 notepad.addEventListener('input', () => {
+  fixMarkLeak();
   localStorage.setItem('hobby_freenotes', notepad.innerHTML);
   saveStatus.textContent = 'Enregistré ✓ (' + new Date().toLocaleTimeString('fr-FR') + ')';
 });
@@ -324,6 +324,37 @@ notepad.addEventListener('click', (e) => {
   }
 });
 
+function fixMarkLeak() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || !sel.isCollapsed) return;
+  const range = sel.getRangeAt(0);
+  const node = range.startContainer;
+  if (node.nodeType !== 3) return;
+  const markEl = node.parentElement && node.parentElement.closest ? node.parentElement.closest('mark') : null;
+  if (!markEl || markEl.dataset.lockedLen === undefined) return;
+
+  const lockedLen = parseInt(markEl.dataset.lockedLen, 10);
+  const currentText = markEl.textContent;
+  if (currentText.length <= lockedLen) return;
+
+  const kept = currentText.slice(0, lockedLen);
+  const leaked = currentText.slice(lockedLen);
+  markEl.textContent = kept;
+
+  let plainNode = markEl.nextSibling;
+  if (!(plainNode && plainNode.nodeType === 3)) {
+    plainNode = document.createTextNode('');
+    markEl.parentNode.insertBefore(plainNode, markEl.nextSibling);
+  }
+  plainNode.textContent = leaked + plainNode.textContent;
+
+  const newRange = document.createRange();
+  newRange.setStart(plainNode, leaked.length);
+  newRange.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+}
+
 function placeCaretAfter(node) {
   const spacer = document.createTextNode('\u200B');
   if (node.nextSibling) {
@@ -338,22 +369,6 @@ function placeCaretAfter(node) {
   sel.removeAllRanges();
   sel.addRange(newRange);
   notepad.focus();
-}
-
-function stopColor() {
-  const sel = window.getSelection();
-  if (!sel.rangeCount) { notepad.focus(); return; }
-  const range = sel.getRangeAt(0);
-  const spacer = document.createTextNode('\u200B');
-  range.insertNode(spacer);
-  const newRange = document.createRange();
-  newRange.setStart(spacer, 1);
-  newRange.collapse(true);
-  sel.removeAllRanges();
-  sel.addRange(newRange);
-  notepad.focus();
-  localStorage.setItem('hobby_freenotes', notepad.innerHTML);
-  saveStatus.textContent = 'Mode couleur arrêté, vous écrivez en noir ✓';
 }
 
 function toggleCase(mode) {
@@ -378,6 +393,7 @@ function highlight(color) {
   mark.className = color;
   mark.title = "Touchez pour retirer le surlignage";
   mark.appendChild(range.extractContents());
+  mark.dataset.lockedLen = mark.textContent.length;
   range.insertNode(mark);
   placeCaretAfter(mark);
   localStorage.setItem('hobby_freenotes', notepad.innerHTML);
