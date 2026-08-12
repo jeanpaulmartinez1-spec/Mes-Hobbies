@@ -30,6 +30,7 @@
              font-size:0.9em; text-align:center; cursor:pointer; min-height:60px; display:flex; align-items:center; justify-content:center; }
 
   .details { background:var(--panel); border-radius:12px; padding:16px; min-height:120px; }
+  .details.hidden { display:none; }
   .details h2 { margin-top:0; color:var(--accent); font-size:1.1em; }
   .item-list { list-style:none; padding:0; margin:0 0 12px 0; }
   .item-list li { display:flex; align-items:center; justify-content:space-between; gap:8px;
@@ -81,7 +82,7 @@
 <div class="container">
   <div class="buttons" id="btn-container"></div>
 
-  <div class="details" id="details-panel"></div>
+  <div class="details hidden" id="details-panel"></div>
 
   <div class="notes-section">
     <h2>📝 Bloc-notes</h2>
@@ -150,7 +151,7 @@ function toggleEditMode() {
   editMode = !editMode;
   editModeBtn.classList.toggle('on', editMode);
   renderButtons();
-  if (currentCatId) renderDetails();
+  renderDetails();
 }
 
 function renderButtons() {
@@ -175,11 +176,13 @@ function renderButtons() {
     btnContainer.appendChild(wrap);
   });
 
-  const addBtn = document.createElement('button');
-  addBtn.className = 'add-cat-btn';
-  addBtn.textContent = '➕ Ajouter une catégorie';
-  addBtn.onclick = addCategory;
-  btnContainer.appendChild(addBtn);
+  if (editMode) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-cat-btn';
+    addBtn.textContent = '➕ Ajouter une catégorie';
+    addBtn.onclick = addCategory;
+    btnContainer.appendChild(addBtn);
+  }
 }
 
 function addCategory() {
@@ -200,14 +203,14 @@ function deleteCategory(catId) {
   categories = categories.filter(c => c.id !== catId);
   saveCategories();
   if (currentCatId === catId) {
-    currentCatId = categories.length ? categories[0].id : null;
+    currentCatId = null;
   }
   renderButtons();
   renderDetails();
 }
 
 function selectCategory(catId) {
-  currentCatId = catId;
+  currentCatId = (currentCatId === catId) ? null : catId;
   renderButtons();
   renderDetails();
 }
@@ -215,9 +218,11 @@ function selectCategory(catId) {
 function renderDetails() {
   const cat = categories.find(c => c.id === currentCatId);
   if (!cat) {
-    detailsPanel.innerHTML = '<p class="hint">Ajoutez une catégorie pour commencer.</p>';
+    detailsPanel.classList.add('hidden');
+    detailsPanel.innerHTML = '';
     return;
   }
+  detailsPanel.classList.remove('hidden');
 
   let html = `<h2>${cat.emoji} ${escapeHtml(cat.label)}</h2><ul class="item-list">`;
   cat.items.forEach((item, idx) => {
@@ -292,8 +297,9 @@ function saveEditItem(idx) {
 // --- Bloc-notes libre ---
 window.addEventListener('load', () => {
   loadCategories();
-  if (categories.length) selectCategory(categories[0].id);
-  else renderButtons();
+  currentCatId = null;
+  renderButtons();
+  renderDetails();
 
   const saved = localStorage.getItem('hobby_freenotes');
   if (saved) notepad.innerHTML = saved;
@@ -306,7 +312,6 @@ notepad.addEventListener('input', () => {
   saveStatus.textContent = 'Enregistré ✓ (' + new Date().toLocaleTimeString('fr-FR') + ')';
 });
 
-// Tap on a highlighted word removes its color (mobile-friendly)
 notepad.addEventListener('click', (e) => {
   const mark = e.target.closest('mark');
   if (mark) {
@@ -328,8 +333,17 @@ function toggleCase(mode) {
   span.textContent = newText;
   range.deleteContents();
   range.insertNode(span);
+
+  const newRange = document.createRange();
+  newRange.setStartAfter(span);
+  newRange.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+  notepad.focus();
+
   localStorage.setItem('hobby_freenotes', notepad.innerHTML);
 }
+
 function highlight(color) {
   const sel = window.getSelection();
   if (!sel.rangeCount || sel.isCollapsed) { alert("Sélectionnez du texte d'abord."); return; }
@@ -339,10 +353,18 @@ function highlight(color) {
   mark.title = "Touchez pour retirer le surlignage";
   mark.appendChild(range.extractContents());
   range.insertNode(mark);
+
+  const newRange = document.createRange();
+  newRange.setStartAfter(mark);
+  newRange.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+  notepad.focus();
+
   localStorage.setItem('hobby_freenotes', notepad.innerHTML);
 }
+
 function clearHighlight() {
-  // Removes ALL highlights from the notepad at once
   notepad.querySelectorAll('mark').forEach(mark => {
     const parent = mark.parentNode;
     while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
