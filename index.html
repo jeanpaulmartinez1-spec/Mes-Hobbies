@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mes Hobbies - Ajout d'éléments par catégorie</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root { --bg:#1e1e2e; --panel:#2a2a3d; --accent:#7aa2f7; --text:#e0e0e0; --muted:#9a9ab0; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:16px; text-align:center; background:var(--panel); border-bottom:2px solid var(--accent); }
+  header h1 { margin:0; font-size:1.3em; }
+  header p { margin:4px 0 0; color:var(--muted); font-size:0.85em; }
+  .container { display:flex; flex-direction:column; gap:16px; padding:14px; }
+
+  .buttons { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .cat-btn { padding:12px 10px; border:none; border-radius:10px; background:var(--panel); color:var(--text);
+             font-size:0.9em; text-align:left; cursor:pointer; border-left:5px solid var(--accent);
+             min-height:60px; display:flex; align-items:center; line-height:1.2; }
+  .cat-btn.active { background:var(--accent); color:#14141f; font-weight:bold; }
+
+  .details { background:var(--panel); border-radius:12px; padding:16px; min-height:120px; }
+  .details h2 { margin-top:0; color:var(--accent); font-size:1.1em; }
+  .item-list { list-style:none; padding:0; margin:0 0 12px 0; }
+  .item-list li { display:flex; align-items:center; justify-content:space-between; gap:8px;
+                  background:#14141f; border-radius:8px; padding:10px 12px; margin-bottom:6px; }
+  .item-list li.base-item { border-left:3px solid var(--muted); }
+  .item-list li.custom-item { border-left:3px solid var(--accent); }
+  .item-list li .del-btn { background:#f54242; color:#fff; border:none; border-radius:6px;
+                            padding:4px 9px; cursor:pointer; font-size:0.8em; flex-shrink:0; }
+  .add-row { display:flex; gap:6px; }
+  .add-row input { flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:#14141f; color:var(--text); font-size:0.95em; }
+  .add-row button { padding:10px 14px; border:none; border-radius:8px; background:var(--accent); color:#14141f; font-weight:bold; cursor:pointer; }
+  .hint { color:var(--muted); font-size:0.8em; margin-top:8px; }
+
+  .notes-section { padding:16px; background:var(--panel); border-radius:12px; }
+  .notes-section h2 { color:var(--accent); margin-top:0; font-size:1.1em; }
+  .notes-section .hint { margin-top:0; margin-bottom:8px; }
+  .toolbar { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .toolbar button { padding:9px 10px; border:none; border-radius:6px; cursor:pointer; font-size:0.85em; background:#3a3a52; color:var(--text); }
+  .swatch-yellow { background:#f5e642 !important; color:#222 !important; }
+  .swatch-red { background:#f54242 !important; color:#fff !important; }
+  .swatch-green { background:#42f56f !important; color:#222 !important; }
+  .swatch-clear { background:#666 !important; }
+  #notepad { width:100%; min-height:150px; background:#14141f; color:var(--text); border:1px solid #444;
+             border-radius:8px; padding:12px; font-size:1em; line-height:1.5; outline:none; }
+  mark.yellow { background:#f5e642; color:#222; } mark.red { background:#f54242; color:#fff; } mark.green { background:#42f56f; color:#222; }
+  .save-status { margin-top:8px; font-size:0.85em; color:var(--muted); }
+
+  .drive-section { padding:16px; background:var(--panel); border-radius:12px; }
+  .drive-section h2 { color:var(--accent); margin-top:0; font-size:1.1em; }
+  #authorize_button, #sync_button { padding:12px 16px; border:none; border-radius:8px; background:var(--accent);
+             color:#14141f; font-weight:bold; font-size:1em; cursor:pointer; width:100%; margin-top:8px; }
+  #sync_button:disabled { background:#555; color:#aaa; cursor:not-allowed; }
+  #status { margin-top:10px; font-size:0.85em; color:var(--muted); }
+  .config-box { background:#14141f; border-radius:8px; padding:12px; margin-bottom:10px; }
+  .config-box label { font-size:0.85em; color:var(--muted); display:block; margin-bottom:4px; }
+  .config-box input { width:100%; padding:8px; border-radius:6px; border:1px solid #444; background:#1e1e2e; color:var(--text); }
+  footer { text-align:center; padding:12px; color:var(--muted); font-size:0.75em; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Mes Hobbies</h1>
+  <p>Ajoutez vos propres éléments dans chaque catégorie</p>
+</header>
+
+<div class="container">
+  <div class="buttons" id="btn-container"></div>
+
+  <div class="details" id="details-panel">
+    <h2>Bienvenue</h2>
+    <p class="hint">Touchez une catégorie ci-dessus pour voir sa liste et pouvoir y ajouter de nouveaux éléments.</p>
+  </div>
+
+  <div class="notes-section">
+    <h2>Bloc-notes (idées à la volée)</h2>
+    <p class="hint">Cet espace est indépendant des catégories : c'est pour jeter une idée rapidement, sans la classer.</p>
+    <div class="toolbar">
+      <button onclick="toggleCase('upper')">MAJ</button>
+      <button onclick="toggleCase('lower')">min</button>
+      <button class="swatch-yellow" onclick="highlight('yellow')">Jaune</button>
+      <button class="swatch-red" onclick="highlight('red')">Rouge</button>
+      <button class="swatch-green" onclick="highlight('green')">Vert</button>
+      <button class="swatch-clear" onclick="clearHighlight()">Effacer</button>
+    </div>
+    <div id="notepad" contenteditable="true"></div>
+    <div class="save-status" id="save-status">Sauvegardé automatiquement dans le navigateur.</div>
+  </div>
+
+  <div class="drive-section">
+    <h2>Google Drive</h2>
+    <div class="config-box">
+      <label>Client ID Google (voir instructions fournies)</label>
+      <input type="text" id="client_id" placeholder="xxxxxxxxxx.apps.googleusercontent.com">
+    </div>
+    <button id="authorize_button" onclick="handleAuth()">Se connecter à Google Drive</button>
+    <button id="sync_button" onclick="syncAllToDrive()" disabled>Tout synchroniser vers Google Drive</button>
+    <div id="status">Non connecté.</div>
+  </div>
+</div>
+
+<footer>Vos ajouts par catégorie et votre bloc-notes sont sauvegardés localement, puis sur Drive</footer>
+
+<script>
+const baseCategories = [
+  { id:"tech", label:"Technologie et informatique", items:["IA, ordinateurs quantiques, puissance de calcul","Téléphone portable pliable","Administration Linux (Lubuntu, Plasma X11)","Réseau, WiFi 6, optimisation","Développement web (HTML/JS, PWA)","LLM en local (Ollama, LM Studio)"] },
+  { id:"sciences", label:"Sciences fondamentales et spatial", items:["Atomes, molécules, photons, électrons","Physique quantique","Domaine spatial","Contenus scientifiques et tutoriels techniques"] },
+  { id:"nature", label:"Nature, vivant et jardin technologique", items:["Animaux, insectes","Le végétal","Panneau solaire, pompe à chaleur","Puits canadien ou provençal","Rénovation et amélioration de l'habitat"] },
+  { id:"finance", label:"Finance et économie", items:["Bourse, placements","Startups, bitcoin","Intérêt composé"] },
+  { id:"memoire", label:"Cerveau, mémoire et apprentissage", items:["Techniques de mémorisation","Mentalistes, champions de mémoire","Auto-formation Linux et web"] },
+  { id:"bricolage", label:"Bricolage, astuces et réparation", items:["Génie de la réparation (astuces africaines)","Trucs et astuces pratiques","Dépannage technologique","Entretien domestique et laverie"] },
+  { id:"manuel", label:"Travaux manuels et pliage", items:["Les nœuds","Pliage de vêtements et serviettes","Origami papier","Photographie et traitement d'image"] },
+  { id:"complementaire", label:"Hobbies complémentaires", items:["Randonnée et activités de plein air","Cuisine","Streaming de contenu en direct","Documentation technique et tutoriels"] }
+];
+
+let currentCat = null;
+const btnContainer = document.getElementById('btn-container');
+const detailsPanel = document.getElementById('details-panel');
+const notepad = document.getElementById('notepad');
+const saveStatus = document.getElementById('save-status');
+
+function customKey(catId) { return 'hobby_custom_' + catId; }
+function getCustomItems(catId) {
+  const raw = localStorage.getItem(customKey(catId));
+  return raw ? JSON.parse(raw) : [];
+}
+function setCustomItems(catId, items) {
+  localStorage.setItem(customKey(catId), JSON.stringify(items));
+}
+
+baseCategories.forEach(cat => {
+  const btn = document.createElement('button');
+  btn.className = 'cat-btn';
+  btn.textContent = cat.label;
+  btn.onclick = () => selectCategory(cat, btn);
+  btnContainer.appendChild(btn);
+});
+
+function selectCategory(cat, btn) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentCat = cat;
+  renderDetails();
+}
+
+function renderDetails() {
+  const cat = currentCat;
+  const customItems = getCustomItems(cat.id);
+
+  let html = `<h2>${cat.label}</h2><ul class="item-list">`;
+  cat.items.forEach((item) => {
+    html += `<li class="base-item"><span>${escapeHtml(item)}</span></li>`;
+  });
+  customItems.forEach((item, idx) => {
+    html += `<li class="custom-item"><span>${escapeHtml(item)}</span><button class="del-btn" onclick="deleteCustomItem(${idx})">✕</button></li>`;
+  });
+  html += `</ul>`;
+  html += `<div class="add-row">
+              <input type="text" id="new-item-input" placeholder="Ajouter un élément à cette catégorie...">
+              <button onclick="addCustomItem()">Ajouter</button>
+            </div>
+            <p class="hint">Les éléments avec bordure bleue sont ceux que vous avez ajoutés ; ils sont sauvegardés automatiquement.</p>`;
+  detailsPanel.innerHTML = html;
+
+  document.getElementById('new-item-input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addCustomItem();
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function addCustomItem() {
+  const input = document.getElementById('new-item-input');
+  const value = input.value.trim();
+  if (!value) return;
+  const items = getCustomItems(currentCat.id);
+  items.push(value);
+  setCustomItems(currentCat.id, items);
+  renderDetails();
+}
+
+function deleteCustomItem(idx) {
+  const items = getCustomItems(currentCat.id);
+  items.splice(idx, 1);
+  setCustomItems(currentCat.id, items);
+  renderDetails();
+}
+
+// --- Bloc-notes libre (idées à la volée) ---
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('hobby_freenotes');
+  if (saved) notepad.innerHTML = saved;
+  const savedClientId = localStorage.getItem('gdrive_client_id');
+  if (savedClientId) document.getElementById('client_id').value = savedClientId;
+});
+notepad.addEventListener('input', () => {
+  localStorage.setItem('hobby_freenotes', notepad.innerHTML);
+  saveStatus.textContent = 'Enregistré ✓ (' + new Date().toLocaleTimeString('fr-FR') + ')';
+});
+
+function toggleCase(mode) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) { alert("Sélectionnez du texte d'abord."); return; }
+  const range = sel.getRangeAt(0);
+  const text = range.toString();
+  const newText = mode === 'upper' ? text.toUpperCase() : text.toLowerCase();
+  const span = document.createElement('span');
+  span.textContent = newText;
+  range.deleteContents();
+  range.insertNode(span);
+  localStorage.setItem('hobby_freenotes', notepad.innerHTML);
+}
+function highlight(color) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) { alert("Sélectionnez du texte d'abord."); return; }
+  const range = sel.getRangeAt(0);
+  const mark = document.createElement('mark');
+  mark.className = color;
+  mark.appendChild(range.extractContents());
+  range.insertNode(mark);
+  localStorage.setItem('hobby_freenotes', notepad.innerHTML);
+}
+function clearHighlight() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) { alert("Sélectionnez du texte surligné."); return; }
+  const range = sel.getRangeAt(0);
+  const contents = range.extractContents();
+  const plain = document.createDocumentFragment();
+  contents.childNodes.forEach(node => plain.appendChild(document.createTextNode(node.textContent || '')));
+  range.insertNode(plain);
+  localStorage.setItem('hobby_freenotes', notepad.innerHTML);
+}
+
+// --- Google Drive Sync ---
+let accessToken = null;
+const SCOPES = "https://www.googleapis.com/auth/drive.file";
+
+function handleAuth() {
+  const clientId = document.getElementById('client_id').value.trim();
+  if (!clientId) { alert("Merci de coller votre Client ID Google d'abord."); return; }
+  localStorage.setItem('gdrive_client_id', clientId);
+
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: SCOPES,
+    callback: (response) => {
+      if (response.access_token) {
+        accessToken = response.access_token;
+        document.getElementById('status').textContent = "Connecté à Google Drive.";
+        document.getElementById('sync_button').disabled = false;
+      }
+    },
+  });
+  client.requestAccessToken();
+}
+
+async function driveFetch(url, options = {}) {
+  options.headers = Object.assign({}, options.headers, { 'Authorization': 'Bearer ' + accessToken });
+  const res = await fetch(url, options);
+  return res.json();
+}
+
+async function findOrCreateFolder(name, parentId) {
+  const q = encodeURIComponent(`name='${name.replace(/'/g,"\\'")}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`);
+  const search = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+  if (search.files && search.files.length > 0) return search.files[0].id;
+  const meta = { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] };
+  const created = await driveFetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(meta)
+  });
+  return created.id;
+}
+
+async function findFileInFolder(name, folderId) {
+  const q = encodeURIComponent(`name='${name.replace(/'/g,"\\'")}' and '${folderId}' in parents and trashed=false`);
+  const search = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
+  return (search.files && search.files.length > 0) ? search.files[0].id : null;
+}
+
+async function createDocInFolder(name, content, folderId) {
+  const boundary = '-------314159265358979323846';
+  const metadata = { name, mimeType: 'application/vnd.google-apps.document', parents: [folderId] };
+  const multipartBody =
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
+    `--${boundary}\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n${content}\r\n--${boundary}--`;
+  return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body: multipartBody
+  });
+}
+
+async function updateDocContent(fileId, content) {
+  return driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'text/html; charset=UTF-8' },
+    body: content
+  });
+}
+
+async function upsertDocInFolder(name, content, folderId) {
+  const existingId = await findFileInFolder(name, folderId);
+  if (existingId) {
+    await updateDocContent(existingId, content);
+  } else {
+    await createDocInFolder(name, content, folderId);
+  }
+}
+
+async function syncAllToDrive() {
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = "Synchronisation en cours...";
+  try {
+    const rootId = await findOrCreateFolder('Mes Hobbies', 'root');
+
+    for (const cat of baseCategories) {
+      const folderId = await findOrCreateFolder(cat.label, rootId);
+      const customItems = getCustomItems(cat.id);
+      const htmlContent = `<h1>${cat.label}</h1>
+        <h2>Éléments de base</h2><ul>${cat.items.map(i => `<li>${i}</li>`).join('')}</ul>
+        <h2>Éléments ajoutés</h2><ul>${customItems.length ? customItems.map(i => `<li>${i}</li>`).join('') : '<li>(aucun)</li>'}</ul>`;
+      await upsertDocInFolder(cat.label, htmlContent, folderId);
+    }
+
+    const freeNotes = localStorage.getItem('hobby_freenotes') || '<p>(vide)</p>';
+    const notesHtml = `<h1>Bloc-notes (idées à la volée)</h1>${freeNotes}`;
+    await upsertDocInFolder('Bloc-notes', notesHtml, rootId);
+
+    statusEl.textContent = "Synchronisation terminée ! Chaque catégorie contient ses éléments de base + vos ajouts, et le Bloc-notes est à jour.";
+  } catch (e) {
+    statusEl.textContent = "Erreur pendant la synchronisation : " + e.message;
+  }
+}
+</script>
+</body>
+</html>
