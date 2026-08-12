@@ -93,9 +93,10 @@
       <button class="swatch-red" onclick="highlight('red')">Rouge</button>
       <button class="swatch-green" onclick="highlight('green')">Vert</button>
       <button class="swatch-clear" onclick="clearHighlight()">Effacer</button>
+      <button onclick="stopColor()">⬛ Stop couleur</button>
     </div>
     <div id="notepad" contenteditable="true"></div>
-    <div class="save-status" id="save-status">Astuce : touchez un mot surligné pour retirer sa couleur.</div>
+    <div class="save-status" id="save-status">Astuce : touchez un mot surligné pour retirer sa couleur. Si le texte reste coloré en tapant, appuyez sur "Stop couleur".</div>
   </div>
 
   <div class="drive-section">
@@ -323,6 +324,38 @@ notepad.addEventListener('click', (e) => {
   }
 });
 
+function placeCaretAfter(node) {
+  const spacer = document.createTextNode('\u200B');
+  if (node.nextSibling) {
+    node.parentNode.insertBefore(spacer, node.nextSibling);
+  } else {
+    node.parentNode.appendChild(spacer);
+  }
+  const sel = window.getSelection();
+  const newRange = document.createRange();
+  newRange.setStart(spacer, 1);
+  newRange.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+  notepad.focus();
+}
+
+function stopColor() {
+  const sel = window.getSelection();
+  if (!sel.rangeCount) { notepad.focus(); return; }
+  const range = sel.getRangeAt(0);
+  const spacer = document.createTextNode('\u200B');
+  range.insertNode(spacer);
+  const newRange = document.createRange();
+  newRange.setStart(spacer, 1);
+  newRange.collapse(true);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+  notepad.focus();
+  localStorage.setItem('hobby_freenotes', notepad.innerHTML);
+  saveStatus.textContent = 'Mode couleur arrêté, vous écrivez en noir ✓';
+}
+
 function toggleCase(mode) {
   const sel = window.getSelection();
   if (!sel.rangeCount || sel.isCollapsed) { alert("Sélectionnez du texte d'abord."); return; }
@@ -333,14 +366,7 @@ function toggleCase(mode) {
   span.textContent = newText;
   range.deleteContents();
   range.insertNode(span);
-
-  const newRange = document.createRange();
-  newRange.setStartAfter(span);
-  newRange.collapse(true);
-  sel.removeAllRanges();
-  sel.addRange(newRange);
-  notepad.focus();
-
+  placeCaretAfter(span);
   localStorage.setItem('hobby_freenotes', notepad.innerHTML);
 }
 
@@ -353,14 +379,7 @@ function highlight(color) {
   mark.title = "Touchez pour retirer le surlignage";
   mark.appendChild(range.extractContents());
   range.insertNode(mark);
-
-  const newRange = document.createRange();
-  newRange.setStartAfter(mark);
-  newRange.collapse(true);
-  sel.removeAllRanges();
-  sel.addRange(newRange);
-  notepad.focus();
-
+  placeCaretAfter(mark);
   localStorage.setItem('hobby_freenotes', notepad.innerHTML);
 }
 
