@@ -47,24 +47,43 @@
   .add-row button { padding:10px 14px; border:none; border-radius:8px; background:var(--accent); color:#14141f; font-weight:bold; cursor:pointer; }
   .hint { color:var(--muted); font-size:0.8em; margin-top:8px; }
 
-  .notes-section { padding:16px; background:var(--panel); border-radius:12px; }
-  #notepad-toggle-btn { width:100%; text-align:left; background:none; border:none; color:var(--accent);
+  .collapsible-section { padding:16px; background:var(--panel); border-radius:12px; }
+  .section-toggle-btn { width:100%; text-align:left; background:none; border:none; color:var(--accent);
              font-size:1.1em; font-weight:bold; cursor:pointer; padding:0; display:flex; align-items:center; gap:8px; }
-  #notepad-toggle-btn .chevron { font-size:0.8em; color:var(--muted); margin-left:auto; }
-  .notepad-body { margin-top:12px; }
-  .notepad-body.hidden { display:none; }
-  .toolbar { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .section-toggle-btn .chevron { font-size:0.8em; color:var(--muted); margin-left:auto; }
+  .section-body { margin-top:12px; }
+  .section-body.hidden { display:none; }
+
+  .toolbar { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
   .toolbar button { padding:9px 10px; border:none; border-radius:6px; cursor:pointer; font-size:0.85em; background:#3a3a52; color:var(--text); }
   .swatch-yellow { background:#f5e642 !important; color:#222 !important; }
   .swatch-red { background:#f54242 !important; color:#fff !important; }
   .swatch-green { background:#42f56f !important; color:#222 !important; }
   .swatch-clear { background:#666 !important; }
+  .save-new-btn { background:var(--accent) !important; color:#14141f !important; font-weight:bold; }
+  .color-picker-inline { width:44px; height:36px; border:none; border-radius:6px; padding:2px; background:#14141f; cursor:pointer; }
   #notepad { width:100%; min-height:150px; background:#14141f; color:var(--text); border:1px solid #444;
              border-radius:8px; padding:12px; font-size:1em; line-height:1.5; outline:none; }
-  mark.yellow { background:#f5e642; color:#222; cursor:pointer; } mark.red { background:#f54242; color:#fff; cursor:pointer; } mark.green { background:#42f56f; color:#222; cursor:pointer; }
+  mark { cursor:pointer; }
   .save-status { margin-top:8px; font-size:0.85em; color:var(--muted); }
 
-  .drive-section { padding:16px; background:var(--panel); border-radius:12px; }
+  .saved-list { margin-top:14px; }
+  .saved-list h3 { font-size:0.95em; color:var(--muted); margin:0 0 8px 0; }
+  .saved-item { display:flex; align-items:center; justify-content:space-between; gap:8px;
+                background:#14141f; border-radius:8px; padding:8px 10px; margin-bottom:6px; }
+  .saved-item .saved-preview { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.85em; cursor:pointer; color:var(--text); }
+  .saved-item .saved-date { font-size:0.75em; color:var(--muted); margin-right:8px; flex-shrink:0; }
+  .saved-item .saved-actions { display:flex; gap:6px; flex-shrink:0; }
+  .saved-item button { border:none; border-radius:6px; padding:5px 9px; cursor:pointer; font-size:0.8em; }
+  .saved-item .open-btn { background:#3a3a52; color:var(--text); }
+  .saved-item .del-btn { background:#f54242; color:#fff; }
+  .saved-item img.thumb { width:44px; height:44px; object-fit:cover; border-radius:6px; margin-right:8px; background:#fff; cursor:pointer; flex-shrink:0; }
+
+  #sketch-canvas { width:100%; height:320px; background:#ffffff; border-radius:8px; display:block; touch-action:none; border:1px solid #444; }
+  .sketch-toolbar { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
+  .sketch-toolbar label { font-size:0.85em; color:var(--muted); display:flex; align-items:center; gap:4px; }
+  #brush-size { width:90px; }
+
   .drive-section h2 { color:var(--accent); margin-top:0; font-size:1.1em; }
   #authorize_button, #sync_button { padding:12px 16px; border:none; border-radius:8px; background:var(--accent);
              color:#14141f; font-weight:bold; font-size:1em; cursor:pointer; width:100%; margin-top:8px; }
@@ -90,38 +109,71 @@
 
   <div class="details hidden" id="details-panel"></div>
 
-  <div class="notes-section">
-    <button id="notepad-toggle-btn" onclick="toggleNotepad()">
+  <div class="collapsible-section">
+    <button class="section-toggle-btn" onclick="toggleSection('notepad-body','notepad-chevron')">
       <span>📝 Bloc-notes</span>
       <span class="chevron" id="notepad-chevron">▼</span>
     </button>
-    <div class="notepad-body hidden" id="notepad-body">
+    <div class="section-body hidden" id="notepad-body">
       <div class="toolbar">
         <button onclick="toggleCase('upper')">MAJ</button>
         <button onclick="toggleCase('lower')">min</button>
-        <button class="swatch-yellow" onclick="highlight('yellow')">Jaune</button>
-        <button class="swatch-red" onclick="highlight('red')">Rouge</button>
-        <button class="swatch-green" onclick="highlight('green')">Vert</button>
+        <input type="color" id="highlight-color" class="color-picker-inline" value="#f5e642" title="Choisir une couleur de surlignage">
+        <button class="swatch-yellow" onclick="setHighlightColor('#f5e642')">Jaune</button>
+        <button class="swatch-red" onclick="setHighlightColor('#f54242')">Rouge</button>
+        <button class="swatch-green" onclick="setHighlightColor('#42f56f')">Vert</button>
+        <button onclick="highlight()">Surligner</button>
         <button class="swatch-clear" onclick="clearHighlight()">Effacer</button>
+        <button class="save-new-btn" onclick="saveNoteAndClear()">💾 Enregistrer et nouveau</button>
       </div>
       <div id="notepad" contenteditable="true"></div>
       <div class="save-status" id="save-status">Astuce : touchez un mot surligné pour retirer sa couleur.</div>
+      <div class="saved-list">
+        <h3>Notes enregistrées</h3>
+        <div id="saved-notes-list"></div>
+      </div>
     </div>
   </div>
 
-  <div class="drive-section">
-    <h2>☁️ Google Drive</h2>
-    <div class="config-box">
-      <label>Client ID Google (voir instructions fournies)</label>
-      <input type="text" id="client_id" placeholder="xxxxxxxxxx.apps.googleusercontent.com">
+  <div class="collapsible-section">
+    <button class="section-toggle-btn" onclick="toggleSection('sketch-body','sketch-chevron')">
+      <span>🎨 Croquis</span>
+      <span class="chevron" id="sketch-chevron">▼</span>
+    </button>
+    <div class="section-body hidden" id="sketch-body">
+      <div class="sketch-toolbar">
+        <label>Couleur <input type="color" id="sketch-color" class="color-picker-inline" value="#000000"></label>
+        <label>Épaisseur <input type="range" id="brush-size" min="1" max="20" value="3"></label>
+        <button class="swatch-clear" onclick="clearCanvas()">Effacer</button>
+        <button class="save-new-btn" onclick="saveSketchAndClear()">💾 Enregistrer et nouveau</button>
+      </div>
+      <canvas id="sketch-canvas"></canvas>
+      <div class="save-status" id="sketch-status">Dessinez avec le doigt ou la souris.</div>
+      <div class="saved-list">
+        <h3>Croquis enregistrés</h3>
+        <div id="saved-sketches-list"></div>
+      </div>
     </div>
-    <button id="authorize_button" onclick="handleAuth()">Se connecter à Google Drive</button>
-    <button id="sync_button" onclick="syncAllToDrive()" disabled>Tout synchroniser vers Google Drive</button>
-    <div id="status">Non connecté.</div>
+  </div>
+
+  <div class="collapsible-section">
+    <button class="section-toggle-btn" onclick="toggleSection('drive-body','drive-chevron')">
+      <span>☁️ Google Drive</span>
+      <span class="chevron" id="drive-chevron">▼</span>
+    </button>
+    <div class="section-body hidden drive-section" id="drive-body">
+      <div class="config-box">
+        <label>Client ID Google (voir instructions fournies)</label>
+        <input type="text" id="client_id" placeholder="xxxxxxxxxx.apps.googleusercontent.com">
+      </div>
+      <button id="authorize_button" onclick="handleAuth()">Se connecter à Google Drive</button>
+      <button id="sync_button" onclick="syncAllToDrive()" disabled>Tout synchroniser vers Google Drive</button>
+      <div id="status">Non connecté.</div>
+    </div>
   </div>
 </div>
 
-<footer>Vos catégories, éléments et notes sont sauvegardés localement, puis sur Drive</footer>
+<footer>Vos catégories, éléments, notes et croquis sont sauvegardés localement, puis sur Drive</footer>
 
 <script>
 const defaultCategories = [
@@ -157,17 +209,18 @@ const detailsPanel = document.getElementById('details-panel');
 const notepad = document.getElementById('notepad');
 const saveStatus = document.getElementById('save-status');
 const editModeBtn = document.getElementById('edit-mode-btn');
-const notepadBody = document.getElementById('notepad-body');
-const notepadChevron = document.getElementById('notepad-chevron');
 
-function toggleNotepad() {
-  const isHidden = notepadBody.classList.contains('hidden');
+function toggleSection(bodyId, chevronId) {
+  const body = document.getElementById(bodyId);
+  const chevron = document.getElementById(chevronId);
+  const isHidden = body.classList.contains('hidden');
   if (isHidden) {
-    notepadBody.classList.remove('hidden');
-    notepadChevron.textContent = '▲';
+    body.classList.remove('hidden');
+    chevron.textContent = '▲';
+    if (bodyId === 'sketch-body') setTimeout(initCanvasIfNeeded, 0);
   } else {
-    notepadBody.classList.add('hidden');
-    notepadChevron.textContent = '▼';
+    body.classList.add('hidden');
+    chevron.textContent = '▼';
   }
 }
 
@@ -339,6 +392,63 @@ function saveEditItem(idx) {
 }
 
 // --- Bloc-notes libre ---
+const NOTES_SAVED_KEY = 'hobby_notes_saved';
+let savedNotes = [];
+
+function loadSavedNotes() {
+  const raw = localStorage.getItem(NOTES_SAVED_KEY);
+  savedNotes = raw ? JSON.parse(raw) : [];
+}
+function persistSavedNotes() {
+  localStorage.setItem(NOTES_SAVED_KEY, JSON.stringify(savedNotes));
+}
+
+function renderSavedNotes() {
+  const container = document.getElementById('saved-notes-list');
+  if (!savedNotes.length) {
+    container.innerHTML = '<div class="hint">Aucune note enregistrée pour le moment.</div>';
+    return;
+  }
+  container.innerHTML = savedNotes.slice().reverse().map(n => {
+    const text = n.html.replace(/<[^>]*>/g, ' ').trim().slice(0, 60) || '(vide)';
+    return `<div class="saved-item">
+      <span class="saved-date">${n.date}</span>
+      <span class="saved-preview" onclick="openSavedNote('${n.id}')">${escapeHtml(text)}</span>
+      <span class="saved-actions">
+        <button class="open-btn" onclick="openSavedNote('${n.id}')">Ouvrir</button>
+        <button class="del-btn" onclick="deleteSavedNote('${n.id}')">✕</button>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+function saveNoteAndClear() {
+  const html = notepad.innerHTML.trim();
+  if (html && html !== '<br>') {
+    savedNotes.push({ id: 'note_' + Date.now(), html, date: new Date().toLocaleString('fr-FR') });
+    persistSavedNotes();
+    renderSavedNotes();
+  }
+  notepad.innerHTML = '';
+  localStorage.setItem('hobby_freenotes', '');
+  saveStatus.textContent = 'Note enregistrée ✓ — espace nettoyé pour une nouvelle note.';
+}
+
+function openSavedNote(id) {
+  const note = savedNotes.find(n => n.id === id);
+  if (!note) return;
+  notepad.innerHTML = note.html;
+  localStorage.setItem('hobby_freenotes', note.html);
+  saveStatus.textContent = 'Note rouverte pour modification.';
+}
+
+function deleteSavedNote(id) {
+  if (!confirm('Supprimer cette note enregistrée ?')) return;
+  savedNotes = savedNotes.filter(n => n.id !== id);
+  persistSavedNotes();
+  renderSavedNotes();
+}
+
 window.addEventListener('load', () => {
   loadCategories();
   currentCatId = null;
@@ -349,6 +459,11 @@ window.addEventListener('load', () => {
   if (saved) notepad.innerHTML = saved;
   const savedClientId = localStorage.getItem('gdrive_client_id');
   if (savedClientId) document.getElementById('client_id').value = savedClientId;
+
+  loadSavedNotes();
+  renderSavedNotes();
+  loadSavedSketches();
+  renderSavedSketches();
 });
 
 notepad.addEventListener('input', () => {
@@ -429,18 +544,30 @@ function toggleCase(mode) {
   localStorage.setItem('hobby_freenotes', notepad.innerHTML);
 }
 
-function highlight(color) {
+function setHighlightColor(hex) {
+  document.getElementById('highlight-color').value = hex;
+}
+
+function highlight() {
   const sel = window.getSelection();
   if (!sel.rangeCount || sel.isCollapsed) { alert("Sélectionnez du texte d'abord."); return; }
+  const color = document.getElementById('highlight-color').value;
   const range = sel.getRangeAt(0);
   const mark = document.createElement('mark');
-  mark.className = color;
+  mark.style.backgroundColor = color;
+  mark.style.color = isColorDark(color) ? '#fff' : '#222';
   mark.title = "Touchez pour retirer le surlignage";
   mark.appendChild(range.extractContents());
   mark.dataset.lockedLen = mark.textContent.length;
   range.insertNode(mark);
   placeCaretAfter(mark);
   localStorage.setItem('hobby_freenotes', notepad.innerHTML);
+}
+
+function isColorDark(hex) {
+  const c = hex.replace('#','');
+  const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+  return (0.299*r + 0.587*g + 0.114*b) < 140;
 }
 
 function clearHighlight() {
@@ -451,6 +578,125 @@ function clearHighlight() {
   });
   localStorage.setItem('hobby_freenotes', notepad.innerHTML);
   saveStatus.textContent = 'Tous les surlignages ont été retirés ✓';
+}
+
+// --- Croquis (dessin à main levée) ---
+const SKETCHES_SAVED_KEY = 'hobby_sketches_saved';
+let savedSketches = [];
+let canvas, ctx, drawing = false, lastX = 0, lastY = 0, canvasInitialized = false;
+
+function initCanvasIfNeeded() {
+  if (canvasInitialized) return;
+  canvas = document.getElementById('sketch-canvas');
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  ctx = canvas.getContext('2d');
+  ctx.scale(2, 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  canvas.addEventListener('pointerdown', startDraw);
+  canvas.addEventListener('pointermove', draw);
+  window.addEventListener('pointerup', stopDraw);
+  canvas.addEventListener('pointerleave', stopDraw);
+  canvasInitialized = true;
+}
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function startDraw(e) {
+  drawing = true;
+  const pos = getPos(e);
+  lastX = pos.x; lastY = pos.y;
+  e.preventDefault();
+}
+
+function draw(e) {
+  if (!drawing) return;
+  const pos = getPos(e);
+  ctx.strokeStyle = document.getElementById('sketch-color').value;
+  ctx.lineWidth = document.getElementById('brush-size').value;
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+  lastX = pos.x; lastY = pos.y;
+  e.preventDefault();
+}
+
+function stopDraw() {
+  drawing = false;
+}
+
+function clearCanvas() {
+  if (!canvasInitialized) return;
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  document.getElementById('sketch-status').textContent = 'Espace nettoyé, à vous de dessiner.';
+}
+
+function loadSavedSketches() {
+  const raw = localStorage.getItem(SKETCHES_SAVED_KEY);
+  savedSketches = raw ? JSON.parse(raw) : [];
+}
+function persistSavedSketches() {
+  localStorage.setItem(SKETCHES_SAVED_KEY, JSON.stringify(savedSketches));
+}
+
+function renderSavedSketches() {
+  const container = document.getElementById('saved-sketches-list');
+  if (!savedSketches.length) {
+    container.innerHTML = '<div class="hint">Aucun croquis enregistré pour le moment.</div>';
+    return;
+  }
+  container.innerHTML = savedSketches.slice().reverse().map(s => {
+    return `<div class="saved-item">
+      <img class="thumb" src="${s.dataUrl}" onclick="openSavedSketch('${s.id}')">
+      <span class="saved-date">${s.date}</span>
+      <span class="saved-preview"></span>
+      <span class="saved-actions">
+        <button class="open-btn" onclick="openSavedSketch('${s.id}')">Ouvrir</button>
+        <button class="del-btn" onclick="deleteSavedSketch('${s.id}')">✕</button>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+function saveSketchAndClear() {
+  initCanvasIfNeeded();
+  const dataUrl = canvas.toDataURL('image/png');
+  savedSketches.push({ id: 'sketch_' + Date.now(), dataUrl, date: new Date().toLocaleString('fr-FR') });
+  persistSavedSketches();
+  renderSavedSketches();
+  clearCanvas();
+  document.getElementById('sketch-status').textContent = 'Croquis enregistré ✓ — espace nettoyé pour un nouveau dessin.';
+}
+
+function openSavedSketch(id) {
+  initCanvasIfNeeded();
+  const sketch = savedSketches.find(s => s.id === id);
+  if (!sketch) return;
+  const img = new Image();
+  img.onload = () => {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    document.getElementById('sketch-status').textContent = 'Croquis rouvert pour modification.';
+  };
+  img.src = sketch.dataUrl;
+}
+
+function deleteSavedSketch(id) {
+  if (!confirm('Supprimer ce croquis enregistré ?')) return;
+  savedSketches = savedSketches.filter(s => s.id !== id);
+  persistSavedSketches();
+  renderSavedSketches();
 }
 
 // --- Google Drive Sync ---
@@ -531,6 +777,28 @@ async function upsertDocInFolder(name, content, folderId) {
   }
 }
 
+async function findImageInFolder(name, folderId) {
+  return findFileInFolder(name, folderId);
+}
+
+async function uploadImageToFolder(name, dataUrl, folderId) {
+  const base64 = dataUrl.split(',')[1];
+  const byteChars = atob(base64);
+  const byteNumbers = new Array(byteChars.length);
+  for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+  const byteArray = new Uint8Array(byteNumbers);
+  const boundary = '-------314159265358979323846';
+  const metadata = { name, parents: [folderId] };
+  const metaPart = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: image/png\r\n\r\n`;
+  const endPart = `\r\n--${boundary}--`;
+  const blob = new Blob([metaPart, byteArray, endPart], { type: `multipart/related; boundary=${boundary}` });
+  return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
+    body: blob
+  });
+}
+
 async function syncAllToDrive() {
   const statusEl = document.getElementById('status');
   statusEl.textContent = "Synchronisation en cours...";
@@ -544,10 +812,21 @@ async function syncAllToDrive() {
     }
 
     const freeNotes = localStorage.getItem('hobby_freenotes') || '<p>(vide)</p>';
-    const notesHtml = `<h1>📝 Bloc-notes</h1>${freeNotes}`;
+    const notesHtml = `<h1>📝 Bloc-notes (en cours)</h1>${freeNotes}`;
     await upsertDocInFolder('Bloc-notes', notesHtml, rootId);
 
-    statusEl.textContent = "Synchronisation terminée ! Toutes vos catégories et le Bloc-notes sont à jour sur Drive.";
+    const notesFolderId = await findOrCreateFolder('Bloc-notes enregistrés', rootId);
+    for (const n of savedNotes) {
+      await upsertDocInFolder('Note ' + n.date, `<h1>📝 Note du ${n.date}</h1>${n.html}`, notesFolderId);
+    }
+
+    const sketchFolderId = await findOrCreateFolder('Croquis enregistrés', rootId);
+    for (const s of savedSketches) {
+      const existing = await findImageInFolder('Croquis ' + s.date + '.png', sketchFolderId);
+      if (!existing) await uploadImageToFolder('Croquis ' + s.date + '.png', s.dataUrl, sketchFolderId);
+    }
+
+    statusEl.textContent = "Synchronisation terminée ! Catégories, Bloc-notes et Croquis sont à jour sur Drive.";
   } catch (e) {
     statusEl.textContent = "Erreur pendant la synchronisation : " + e.message;
   }
