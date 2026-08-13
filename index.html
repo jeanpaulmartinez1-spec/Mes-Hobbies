@@ -34,9 +34,9 @@ header .title-block{text-align:left;} header h1{margin:0;font-size:1.2em;}
 .item-list li .item-actions{display:flex;gap:6px;flex-shrink:0;} .item-list li input{flex:1;padding:6px;border-radius:8px;border:1px solid #444;background:#1e1e2e;color:var(--text);}
 .add-row{display:flex;gap:6px;} .add-row input{flex:1;padding:10px;border-radius:10px;border:1px solid #444;background:#14141f;color:var(--text);font-size:0.95em;}
 .hint{color:var(--muted);font-size:0.8em;margin-top:8px;}
-.launcher-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.launcher-btn{background:var(--panel);border:none;border-radius:16px;padding:18px 8px;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:0.85em;font-weight:600;}
-.launcher-btn .ic{font-size:1.8em;} .launcher-btn:active{transform:scale(0.97);}
+.launcher-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
+.launcher-btn{background:var(--panel);border:none;border-radius:16px;padding:14px 6px;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:0.78em;font-weight:600;}
+.launcher-btn .ic{font-size:1.6em;} .launcher-btn:active{transform:scale(0.97);}
 .drive-collapsible{padding:16px;background:var(--panel);border-radius:16px;}
 .section-toggle-btn{width:100%;text-align:left;background:none;border:none;color:var(--accent);font-size:1.1em;font-weight:bold;cursor:pointer;padding:0;display:flex;align-items:center;gap:8px;}
 .section-toggle-btn .chevron{font-size:0.8em;color:var(--muted);margin-left:auto;}
@@ -65,6 +65,12 @@ mark{cursor:pointer;border-radius:3px;padding:0 1px;} .save-status{margin-top:8p
 .sketch-toolbar label{font-size:0.8em;color:var(--muted);display:flex;align-items:center;gap:4px;} #brush-size{width:80px;}
 .sketch-saved-panel{max-height:32vh;overflow-y:auto;padding:10px 14px;background:var(--panel);flex-shrink:0;}
 footer{text-align:center;padding:12px;color:var(--muted);font-size:0.75em;}
+.guide-section{margin-bottom:22px;}
+.guide-section h3{color:var(--accent);font-size:1.05em;margin:0 0 8px 0;border-left:4px solid var(--accent);padding-left:8px;}
+.guide-section h4{color:var(--text);font-size:0.95em;margin:14px 0 4px 0;}
+.guide-section ul{margin:4px 0 4px 0;padding-left:20px;}
+.guide-section li{margin-bottom:4px;font-size:0.9em;line-height:1.4;}
+.guide-note{background:#14141f;border-radius:10px;padding:10px 12px;font-size:0.82em;color:var(--muted);margin-top:16px;}
 </style>
 </head>
 <body>
@@ -79,6 +85,7 @@ footer{text-align:center;padding:12px;color:var(--muted);font-size:0.75em;}
 <button class="launcher-btn" onclick="openNotepad()"><span class="ic">📝</span>Bloc-notes</button>
 <button class="launcher-btn" onclick="openSketch()"><span class="ic">🎨</span>Croquis</button>
 <button class="launcher-btn" onclick="toggleSection('drive-body','drive-chevron')"><span class="ic">☁️</span>Drive</button>
+<button class="launcher-btn" onclick="openGuide()"><span class="ic">📖</span>Guide</button>
 </div>
 <div class="drive-collapsible">
 <button class="section-toggle-btn" onclick="toggleSection('drive-body','drive-chevron')">
@@ -121,6 +128,61 @@ footer{text-align:center;padding:12px;color:var(--muted);font-size:0.75em;}
 <div class="sketch-overlay-body"><canvas id="sketch-canvas"></canvas></div>
 <div class="save-status" id="sketch-status" style="padding:6px 14px;flex-shrink:0;">Dessinez avec le doigt ou la souris, sur tout l'écran.</div>
 <div class="sketch-saved-panel"><h3 style="margin:0 0 8px 0;font-size:0.9em;color:var(--muted);">Croquis enregistrés</h3><div id="saved-sketches-list"></div></div>
+</div>
+<div class="overlay" id="guide-overlay">
+<div class="overlay-header"><h2>📖 Guide de l'application</h2><button class="btn btn-icon btn-secondary" onclick="closeGuide()">✕</button></div>
+<div class="overlay-body" id="guide-body">
+<div class="guide-section">
+<h3>🗂️ Catégories et éléments</h3>
+<p style="font-size:0.85em;color:var(--muted);">Chaque catégorie ci-dessous correspond à un bouton de l'écran d'accueil. En mode Édition, vous pouvez renommer une catégorie, changer son emoji, en ajouter ou en supprimer. Les éléments listés sont ceux fournis par défaut ; vos ajouts personnels s'affichent aussi ici automatiquement.</p>
+<div id="guide-categories"></div>
+</div>
+<div class="guide-section">
+<h3>📝 Bloc-notes</h3>
+<h4>Fonctionnalités :</h4>
+<ul>
+<li>Mise en majuscules (MAJ) ou minuscules (min) du texte sélectionné.</li>
+<li>Surlignage avec couleurs rapides (jaune, rouge, vert) ou couleur libre via une pastille de sélection.</li>
+<li>Retrait du surlignage d'un simple clic sur le texte surligné.</li>
+<li>Bouton « Enregistrer et nouveau » : archive la note en cours et libère l'espace pour une nouvelle note.</li>
+<li>Liste des notes enregistrées, consultables (« Ouvrir ») ou supprimables.</li>
+<li>Sauvegarde automatique locale à chaque frappe.</li>
+</ul>
+</div>
+<div class="guide-section">
+<h3>🎨 Croquis</h3>
+<h4>Fonctionnalités :</h4>
+<ul>
+<li>Dessin tactile (doigt) ou à la souris, sur la quasi-totalité de l'écran.</li>
+<li>Choix libre de la couleur du trait et de son épaisseur.</li>
+<li>Bouton « Effacer » pour nettoyer le canevas en cours.</li>
+<li>Bouton « Enregistrer et nouveau » : archive le croquis et nettoie l'espace pour un nouveau dessin.</li>
+<li>Liste des croquis enregistrés avec vignette, consultables ou supprimables.</li>
+</ul>
+</div>
+<div class="guide-section">
+<h3>☁️ Google Drive</h3>
+<h4>Fonctionnement :</h4>
+<ul>
+<li>Connexion via un Client ID Google (OAuth) à renseigner une seule fois.</li>
+<li>Bouton « Se connecter à Google Drive » pour autoriser l'accès.</li>
+<li>Bouton « Tout synchroniser » envoie catégories, bloc-notes, notes et croquis enregistrés.</li>
+<li>Un dossier « Mes Hobbies » est créé automatiquement, avec des sous-dossiers dédiés.</li>
+<li>La synchronisation n'est pas automatique : elle se déclenche uniquement au clic.</li>
+</ul>
+</div>
+<div class="guide-section">
+<h3>✏️ Mode Édition</h3>
+<ul>
+<li>Activable via le bouton « Édition » en haut de l'écran.</li>
+<li>Ajouter une nouvelle catégorie (nom + emoji au choix).</li>
+<li>Modifier le nom et l'emoji d'une catégorie existante (bouton crayon).</li>
+<li>Supprimer une catégorie et tout son contenu (bouton croix rouge), après confirmation.</li>
+<li>Ajouter, modifier ou supprimer les éléments à l'intérieur de chaque catégorie.</li>
+</ul>
+</div>
+<div class="guide-note">ℹ️ Les catégories personnalisées, éléments ajoutés, notes et croquis que vous créez sont stockés directement sur votre téléphone (mémoire locale du navigateur). Pour sauvegarder ce contenu ailleurs, utilisez la synchronisation Google Drive.</div>
+</div>
 </div>
 <script>
 const defaultCategories=[{id:"tech",emoji:"💻",label:"Technologie et informatique",items:["IA, ordinateurs quantiques, puissance de calcul","Téléphone portable pliable","Administration Linux (Lubuntu, Plasma X11)","Réseau, WiFi 6, optimisation","Développement web (HTML/JS, PWA)","LLM en local (Ollama, LM Studio)"]},{id:"sciences",emoji:"🔬",label:"Sciences fondamentales et spatial",items:["Atomes, molécules, photons, électrons","Physique quantique","Domaine spatial","Contenus scientifiques et tutoriels techniques"]},{id:"nature",emoji:"🌱",label:"Nature, vivant et jardin technologique",items:["Animaux, insectes","Le végétal","Panneau solaire, pompe à chaleur","Puits canadien ou provençal","Rénovation et amélioration de l'habitat"]},{id:"finance",emoji:"💰",label:"Finance et économie",items:["Bourse, placements","Startups, bitcoin","Intérêt composé"]},{id:"memoire",emoji:"🧠",label:"Cerveau, mémoire et apprentissage",items:["Techniques de mémorisation","Mentalistes, champions de mémoire","Auto-formation Linux et web"]},{id:"bricolage",emoji:"🔧",label:"Bricolage, astuces et réparation",items:["Génie de la réparation (astuces africaines)","Trucs et astuces pratiques","Dépannage technologique","Entretien domestique et laverie"]},{id:"manuel",emoji:"✂️",label:"Travaux manuels et pliage",items:["Les nœuds","Pliage de vêtements et serviettes","Origami papier","Photographie et traitement d'image"]}];
@@ -177,6 +239,9 @@ function renderSavedSketches(){const container=document.getElementById('saved-sk
 function saveSketchAndClear(){initCanvasIfNeeded();const dataUrl=canvas.toDataURL('image/jpeg',0.82);savedSketches.push({id:'sketch_'+Date.now(),dataUrl,date:new Date().toLocaleString('fr-FR')});persistSavedSketches();renderSavedSketches();clearCanvas();document.getElementById('sketch-status').textContent='Croquis enregistré ✓ — espace nettoyé pour un nouveau dessin.';}
 function openSavedSketch(id){initCanvasIfNeeded();const sketch=savedSketches.find(s=>s.id===id);if(!sketch)return;const img=new Image();img.onload=()=>{ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);document.getElementById('sketch-status').textContent='Croquis rouvert pour modification.';};img.src=sketch.dataUrl;openSketch();}
 function deleteSavedSketch(id){if(!confirm('Supprimer ce croquis enregistré ?'))return;savedSketches=savedSketches.filter(s=>s.id!==id);persistSavedSketches();renderSavedSketches();}
+function openGuide(){renderGuideCategories();document.getElementById('guide-overlay').classList.add('open');document.body.style.overflow='hidden';}
+function closeGuide(){document.getElementById('guide-overlay').classList.remove('open');document.body.style.overflow='';}
+function renderGuideCategories(){const container=document.getElementById('guide-categories');container.innerHTML=categories.map(cat=>{const items=cat.items.map(it=>`<li>${escapeHtml(it)}</li>`).join('')||'<li style="color:var(--muted);">(aucun élément)</li>';return `<h4>${cat.emoji} ${escapeHtml(cat.label)}</h4><ul>${items}</ul>`;}).join('');}
 window.addEventListener('load',()=>{loadCategories();currentCatId=null;renderButtons();renderDetails();const saved=localStorage.getItem('hobby_freenotes');if(saved)notepad.innerHTML=saved;const savedClientId=localStorage.getItem('gdrive_client_id');if(savedClientId)document.getElementById('client_id').value=savedClientId;loadSavedNotes();renderSavedNotes();loadSavedSketches();renderSavedSketches();});
 let accessToken=null;const SCOPES="https://www.googleapis.com/auth/drive.file";
 function handleAuth(){const clientId=document.getElementById('client_id').value.trim();if(!clientId){alert("Merci de coller votre Client ID Google d'abord.");return;}localStorage.setItem('gdrive_client_id',clientId);const client=google.accounts.oauth2.initTokenClient({client_id:clientId,scope:SCOPES,callback:(response)=>{if(response.access_token){accessToken=response.access_token;document.getElementById('status').textContent="Connecté à Google Drive.";document.getElementById('sync_button').disabled=false;}},});client.requestAccessToken();}
