@@ -2,835 +2,192 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Mes Hobbies</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
-  :root { --bg:#1e1e2e; --panel:#2a2a3d; --accent:#7aa2f7; --text:#e0e0e0; --muted:#9a9ab0; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family:'Segoe UI',Arial,sans-serif; background:var(--bg); color:var(--text); }
-  header { padding:16px; text-align:center; background:var(--panel); border-bottom:2px solid var(--accent);
-            display:flex; justify-content:space-between; align-items:center; gap:10px; }
-  header .title-block { text-align:left; }
-  header h1 { margin:0; font-size:1.2em; }
-  #edit-mode-btn { padding:8px 12px; border:none; border-radius:8px; background:#3a3a52; color:var(--text); cursor:pointer; font-size:0.85em; flex-shrink:0; }
-  #edit-mode-btn.on { background:#f54242; color:#fff; font-weight:bold; }
-  .container { display:flex; flex-direction:column; gap:16px; padding:14px; }
-
-  .buttons { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  .cat-btn-wrap { position:relative; }
-  .cat-btn { width:100%; padding:12px 10px; border:none; border-radius:10px; background:var(--panel); color:var(--text);
-             font-size:0.9em; text-align:left; cursor:pointer; border-left:5px solid var(--accent);
-             min-height:60px; display:flex; align-items:center; gap:8px; line-height:1.2; }
-  .cat-btn .emoji { font-size:1.6em; flex-shrink:0; }
-  .cat-btn.active { background:var(--accent); color:#14141f; font-weight:bold; }
-  .cat-del-btn { position:absolute; top:-6px; right:-6px; background:#f54242; color:#fff; border:none;
-                 border-radius:50%; width:24px; height:24px; font-size:0.8em; cursor:pointer; z-index:2; }
-  .cat-edit-btn { position:absolute; top:-6px; left:-6px; background:var(--accent); color:#14141f; border:none;
-                 border-radius:50%; width:24px; height:24px; font-size:0.8em; cursor:pointer; z-index:2; }
-  .add-cat-btn { padding:12px 10px; border:2px dashed var(--muted); border-radius:10px; background:transparent; color:var(--muted);
-             font-size:0.9em; text-align:center; cursor:pointer; min-height:60px; display:flex; align-items:center; justify-content:center; }
-
-  .details { background:var(--panel); border-radius:12px; padding:16px; min-height:120px; }
-  .details.hidden { display:none; }
-  .details h2 { margin-top:0; color:var(--accent); font-size:1.1em; }
-  .item-list { list-style:none; padding:0; margin:0 0 12px 0; }
-  .item-list li { display:flex; align-items:center; justify-content:space-between; gap:8px;
-                  background:#14141f; border-radius:8px; padding:10px 12px; margin-bottom:6px; border-left:3px solid var(--muted); }
-  .item-list li .item-actions { display:flex; gap:6px; flex-shrink:0; }
-  .item-list li .edit-btn, .item-list li .del-btn { border:none; border-radius:6px; padding:4px 9px; cursor:pointer; font-size:0.8em; }
-  .item-list li .edit-btn { background:#3a3a52; color:var(--text); }
-  .item-list li .del-btn { background:#f54242; color:#fff; }
-  .item-list li input { flex:1; padding:6px; border-radius:6px; border:1px solid #444; background:#1e1e2e; color:var(--text); }
-  .add-row { display:flex; gap:6px; }
-  .add-row input { flex:1; padding:10px; border-radius:8px; border:1px solid #444; background:#14141f; color:var(--text); font-size:0.95em; }
-  .add-row button { padding:10px 14px; border:none; border-radius:8px; background:var(--accent); color:#14141f; font-weight:bold; cursor:pointer; }
-  .hint { color:var(--muted); font-size:0.8em; margin-top:8px; }
-
-  .collapsible-section { padding:16px; background:var(--panel); border-radius:12px; }
-  .section-toggle-btn { width:100%; text-align:left; background:none; border:none; color:var(--accent);
-             font-size:1.1em; font-weight:bold; cursor:pointer; padding:0; display:flex; align-items:center; gap:8px; }
-  .section-toggle-btn .chevron { font-size:0.8em; color:var(--muted); margin-left:auto; }
-  .section-body { margin-top:12px; }
-  .section-body.hidden { display:none; }
-
-  .toolbar { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
-  .toolbar button { padding:9px 10px; border:none; border-radius:6px; cursor:pointer; font-size:0.85em; background:#3a3a52; color:var(--text); }
-  .swatch-yellow { background:#f5e642 !important; color:#222 !important; }
-  .swatch-red { background:#f54242 !important; color:#fff !important; }
-  .swatch-green { background:#42f56f !important; color:#222 !important; }
-  .swatch-clear { background:#666 !important; }
-  .save-new-btn { background:var(--accent) !important; color:#14141f !important; font-weight:bold; }
-  .color-picker-inline { width:44px; height:36px; border:none; border-radius:6px; padding:2px; background:#14141f; cursor:pointer; }
-  #notepad { width:100%; min-height:150px; background:#14141f; color:var(--text); border:1px solid #444;
-             border-radius:8px; padding:12px; font-size:1em; line-height:1.5; outline:none; }
-  mark { cursor:pointer; }
-  .save-status { margin-top:8px; font-size:0.85em; color:var(--muted); }
-
-  .saved-list { margin-top:14px; }
-  .saved-list h3 { font-size:0.95em; color:var(--muted); margin:0 0 8px 0; }
-  .saved-item { display:flex; align-items:center; justify-content:space-between; gap:8px;
-                background:#14141f; border-radius:8px; padding:8px 10px; margin-bottom:6px; }
-  .saved-item .saved-preview { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.85em; cursor:pointer; color:var(--text); }
-  .saved-item .saved-date { font-size:0.75em; color:var(--muted); margin-right:8px; flex-shrink:0; }
-  .saved-item .saved-actions { display:flex; gap:6px; flex-shrink:0; }
-  .saved-item button { border:none; border-radius:6px; padding:5px 9px; cursor:pointer; font-size:0.8em; }
-  .saved-item .open-btn { background:#3a3a52; color:var(--text); }
-  .saved-item .del-btn { background:#f54242; color:#fff; }
-  .saved-item img.thumb { width:44px; height:44px; object-fit:cover; border-radius:6px; margin-right:8px; background:#fff; cursor:pointer; flex-shrink:0; }
-
-  #sketch-canvas { width:100%; height:320px; background:#ffffff; border-radius:8px; display:block; touch-action:none; border:1px solid #444; }
-  .sketch-toolbar { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; align-items:center; }
-  .sketch-toolbar label { font-size:0.85em; color:var(--muted); display:flex; align-items:center; gap:4px; }
-  #brush-size { width:90px; }
-
-  .drive-section h2 { color:var(--accent); margin-top:0; font-size:1.1em; }
-  #authorize_button, #sync_button { padding:12px 16px; border:none; border-radius:8px; background:var(--accent);
-             color:#14141f; font-weight:bold; font-size:1em; cursor:pointer; width:100%; margin-top:8px; }
-  #sync_button:disabled { background:#555; color:#aaa; cursor:not-allowed; }
-  #status { margin-top:10px; font-size:0.85em; color:var(--muted); }
-  .config-box { background:#14141f; border-radius:8px; padding:12px; margin-bottom:10px; }
-  .config-box label { font-size:0.85em; color:var(--muted); display:block; margin-bottom:4px; }
-  .config-box input { width:100%; padding:8px; border-radius:6px; border:1px solid #444; background:#1e1e2e; color:var(--text); }
-  footer { text-align:center; padding:12px; color:var(--muted); font-size:0.75em; }
+:root{--bg:#1e1e2e;--panel:#2a2a3d;--accent:#7aa2f7;--accent2:#5b8cf0;--text:#e0e0e0;--muted:#9a9ab0;--danger:#f54242;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);overscroll-behavior:none;}
+header{padding:16px;text-align:center;background:var(--panel);border-bottom:2px solid var(--accent);display:flex;justify-content:space-between;align-items:center;gap:10px;}
+header .title-block{text-align:left;} header h1{margin:0;font-size:1.2em;}
+.btn{border:none;border-radius:999px;cursor:pointer;font-size:0.85em;font-weight:600;padding:10px 16px;transition:transform .08s ease, filter .15s ease;display:inline-flex;align-items:center;gap:6px;}
+.btn:active{transform:scale(0.96);}
+.btn-secondary{background:#3a3a52;color:var(--text);} .btn-secondary:hover{filter:brightness(1.15);}
+.btn-primary{background:linear-gradient(135deg, var(--accent), var(--accent2));color:#0d0d16;box-shadow:0 3px 10px rgba(122,162,247,0.35);} .btn-primary:hover{filter:brightness(1.08);}
+.btn-danger{background:linear-gradient(135deg, #ff6161, var(--danger));color:#fff;box-shadow:0 3px 10px rgba(245,66,66,0.3);} .btn-danger:hover{filter:brightness(1.1);}
+.btn-icon{width:38px;height:38px;padding:0;justify-content:center;border-radius:50%;} .btn-sm{padding:7px 12px;font-size:0.78em;}
+#edit-mode-btn.on{background:linear-gradient(135deg, #ff6161, var(--danger));color:#fff;}
+.container{display:flex;flex-direction:column;gap:16px;padding:14px;}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cat-btn-wrap{position:relative;}
+.cat-btn{width:100%;padding:12px 10px;border:none;border-radius:14px;background:var(--panel);color:var(--text);font-size:0.9em;text-align:left;cursor:pointer;border-left:5px solid var(--accent);min-height:60px;display:flex;align-items:center;gap:8px;line-height:1.2;}
+.cat-btn .emoji{font-size:1.6em;flex-shrink:0;} .cat-btn.active{background:var(--accent);color:#14141f;font-weight:bold;}
+.cat-del-btn,.cat-edit-btn{position:absolute;top:-6px;border:none;border-radius:50%;width:26px;height:26px;font-size:0.8em;cursor:pointer;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,0.4);}
+.cat-del-btn{right:-6px;background:linear-gradient(135deg,#ff6161,var(--danger));color:#fff;}
+.cat-edit-btn{left:-6px;background:linear-gradient(135deg, var(--accent), var(--accent2));color:#14141f;}
+.add-cat-btn{padding:12px 10px;border:2px dashed var(--muted);border-radius:14px;background:transparent;color:var(--muted);font-size:0.9em;text-align:center;cursor:pointer;min-height:60px;display:flex;align-items:center;justify-content:center;}
+.details{background:var(--panel);border-radius:16px;padding:16px;min-height:120px;} .details.hidden{display:none;} .details h2{margin-top:0;color:var(--accent);font-size:1.1em;}
+.item-list{list-style:none;padding:0;margin:0 0 12px 0;}
+.item-list li{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#14141f;border-radius:10px;padding:10px 12px;margin-bottom:6px;border-left:3px solid var(--muted);}
+.item-list li .item-actions{display:flex;gap:6px;flex-shrink:0;} .item-list li input{flex:1;padding:6px;border-radius:8px;border:1px solid #444;background:#1e1e2e;color:var(--text);}
+.add-row{display:flex;gap:6px;} .add-row input{flex:1;padding:10px;border-radius:10px;border:1px solid #444;background:#14141f;color:var(--text);font-size:0.95em;}
+.hint{color:var(--muted);font-size:0.8em;margin-top:8px;}
+.launcher-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.launcher-btn{background:var(--panel);border:none;border-radius:16px;padding:18px 8px;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:0.85em;font-weight:600;}
+.launcher-btn .ic{font-size:1.8em;} .launcher-btn:active{transform:scale(0.97);}
+.drive-collapsible{padding:16px;background:var(--panel);border-radius:16px;}
+.section-toggle-btn{width:100%;text-align:left;background:none;border:none;color:var(--accent);font-size:1.1em;font-weight:bold;cursor:pointer;padding:0;display:flex;align-items:center;gap:8px;}
+.section-toggle-btn .chevron{font-size:0.8em;color:var(--muted);margin-left:auto;}
+.section-body{margin-top:12px;} .section-body.hidden{display:none;}
+.config-box{background:#14141f;border-radius:10px;padding:12px;margin-bottom:10px;}
+.config-box label{font-size:0.85em;color:var(--muted);display:block;margin-bottom:4px;}
+.config-box input{width:100%;padding:8px;border-radius:8px;border:1px solid #444;background:#1e1e2e;color:var(--text);}
+#authorize_button,#sync_button{width:100%;margin-top:8px;justify-content:center;} #sync_button:disabled{background:#555;color:#aaa;cursor:not-allowed;box-shadow:none;}
+#status{margin-top:10px;font-size:0.85em;color:var(--muted);}
+.overlay{position:fixed;inset:0;background:var(--bg);z-index:1000;display:none;flex-direction:column;} .overlay.open{display:flex;}
+.overlay-header{flex-shrink:0;position:sticky;top:0;z-index:2;background:var(--panel);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:2px solid var(--accent);padding-top:max(12px, env(safe-area-inset-top));}
+.overlay-header h2{margin:0;font-size:1.05em;color:var(--accent);}
+.overlay-body{flex:1;overflow-y:auto;padding:12px 14px;-webkit-overflow-scrolling:touch;}
+.overlay-toolbar{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;align-items:center;padding:8px 14px;background:var(--panel);position:sticky;top:0;z-index:1;}
+.color-picker-inline{width:40px;height:38px;border:none;border-radius:10px;padding:2px;background:#14141f;cursor:pointer;}
+#notepad{width:100%;min-height:40vh;background:#14141f;color:var(--text);border:1px solid #444;border-radius:12px;padding:14px;font-size:1.05em;line-height:1.6;outline:none;}
+mark{cursor:pointer;border-radius:3px;padding:0 1px;} .save-status{margin-top:8px;font-size:0.85em;color:var(--muted);}
+.saved-list{margin-top:14px;} .saved-list h3{font-size:0.95em;color:var(--muted);margin:0 0 8px 0;}
+.saved-item{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#14141f;border-radius:12px;padding:8px 10px;margin-bottom:6px;}
+.saved-item .saved-preview{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.85em;cursor:pointer;color:var(--text);}
+.saved-item .saved-date{font-size:0.72em;color:var(--muted);margin-right:8px;flex-shrink:0;} .saved-item .saved-actions{display:flex;gap:6px;flex-shrink:0;}
+.saved-item img.thumb{width:44px;height:44px;object-fit:cover;border-radius:8px;margin-right:8px;background:#fff;cursor:pointer;flex-shrink:0;}
+.sketch-overlay-body{flex:1;display:flex;flex-direction:column;padding:0;overflow:hidden;}
+#sketch-canvas{width:100%;flex:1;background:#ffffff;display:block;touch-action:none;}
+.sketch-toolbar{display:flex;gap:8px;margin:0;padding:8px 14px;flex-wrap:wrap;align-items:center;background:var(--panel);}
+.sketch-toolbar label{font-size:0.8em;color:var(--muted);display:flex;align-items:center;gap:4px;} #brush-size{width:80px;}
+.sketch-saved-panel{max-height:32vh;overflow-y:auto;padding:10px 14px;background:var(--panel);flex-shrink:0;}
+footer{text-align:center;padding:12px;color:var(--muted);font-size:0.75em;}
 </style>
 </head>
 <body>
-
 <header>
-  <div class="title-block">
-    <h1>Mes Hobbies</h1>
-  </div>
-  <button id="edit-mode-btn" onclick="toggleEditMode()">✏️ Édition</button>
+<div class="title-block"><h1>Mes Hobbies</h1></div>
+<button id="edit-mode-btn" class="btn btn-secondary" onclick="toggleEditMode()">✏️ Édition</button>
 </header>
-
 <div class="container">
-  <div class="buttons" id="btn-container"></div>
-
-  <div class="details hidden" id="details-panel"></div>
-
-  <div class="collapsible-section">
-    <button class="section-toggle-btn" onclick="toggleSection('notepad-body','notepad-chevron')">
-      <span>📝 Bloc-notes</span>
-      <span class="chevron" id="notepad-chevron">▼</span>
-    </button>
-    <div class="section-body hidden" id="notepad-body">
-      <div class="toolbar">
-        <button onclick="toggleCase('upper')">MAJ</button>
-        <button onclick="toggleCase('lower')">min</button>
-        <input type="color" id="highlight-color" class="color-picker-inline" value="#f5e642" title="Choisir une couleur de surlignage">
-        <button class="swatch-yellow" onclick="setHighlightColor('#f5e642')">Jaune</button>
-        <button class="swatch-red" onclick="setHighlightColor('#f54242')">Rouge</button>
-        <button class="swatch-green" onclick="setHighlightColor('#42f56f')">Vert</button>
-        <button onclick="highlight()">Surligner</button>
-        <button class="swatch-clear" onclick="clearHighlight()">Effacer</button>
-        <button class="save-new-btn" onclick="saveNoteAndClear()">💾 Enregistrer et nouveau</button>
-      </div>
-      <div id="notepad" contenteditable="true"></div>
-      <div class="save-status" id="save-status">Astuce : touchez un mot surligné pour retirer sa couleur.</div>
-      <div class="saved-list">
-        <h3>Notes enregistrées</h3>
-        <div id="saved-notes-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="collapsible-section">
-    <button class="section-toggle-btn" onclick="toggleSection('sketch-body','sketch-chevron')">
-      <span>🎨 Croquis</span>
-      <span class="chevron" id="sketch-chevron">▼</span>
-    </button>
-    <div class="section-body hidden" id="sketch-body">
-      <div class="sketch-toolbar">
-        <label>Couleur <input type="color" id="sketch-color" class="color-picker-inline" value="#000000"></label>
-        <label>Épaisseur <input type="range" id="brush-size" min="1" max="20" value="3"></label>
-        <button class="swatch-clear" onclick="clearCanvas()">Effacer</button>
-        <button class="save-new-btn" onclick="saveSketchAndClear()">💾 Enregistrer et nouveau</button>
-      </div>
-      <canvas id="sketch-canvas"></canvas>
-      <div class="save-status" id="sketch-status">Dessinez avec le doigt ou la souris.</div>
-      <div class="saved-list">
-        <h3>Croquis enregistrés</h3>
-        <div id="saved-sketches-list"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="collapsible-section">
-    <button class="section-toggle-btn" onclick="toggleSection('drive-body','drive-chevron')">
-      <span>☁️ Google Drive</span>
-      <span class="chevron" id="drive-chevron">▼</span>
-    </button>
-    <div class="section-body hidden drive-section" id="drive-body">
-      <div class="config-box">
-        <label>Client ID Google (voir instructions fournies)</label>
-        <input type="text" id="client_id" placeholder="xxxxxxxxxx.apps.googleusercontent.com">
-      </div>
-      <button id="authorize_button" onclick="handleAuth()">Se connecter à Google Drive</button>
-      <button id="sync_button" onclick="syncAllToDrive()" disabled>Tout synchroniser vers Google Drive</button>
-      <div id="status">Non connecté.</div>
-    </div>
-  </div>
+<div class="buttons" id="btn-container"></div>
+<div class="details hidden" id="details-panel"></div>
+<div class="launcher-grid">
+<button class="launcher-btn" onclick="openNotepad()"><span class="ic">📝</span>Bloc-notes</button>
+<button class="launcher-btn" onclick="openSketch()"><span class="ic">🎨</span>Croquis</button>
+<button class="launcher-btn" onclick="toggleSection('drive-body','drive-chevron')"><span class="ic">☁️</span>Drive</button>
 </div>
-
+<div class="drive-collapsible">
+<button class="section-toggle-btn" onclick="toggleSection('drive-body','drive-chevron')">
+<span>☁️ Google Drive</span><span class="chevron" id="drive-chevron">▼</span>
+</button>
+<div class="section-body hidden" id="drive-body">
+<div class="config-box"><label>Client ID Google (voir instructions fournies)</label>
+<input type="text" id="client_id" placeholder="xxxxxxxxxx.apps.googleusercontent.com"></div>
+<button id="authorize_button" class="btn btn-primary" onclick="handleAuth()">Se connecter à Google Drive</button>
+<button id="sync_button" class="btn btn-primary" onclick="syncAllToDrive()" disabled>Tout synchroniser vers Google Drive</button>
+<div id="status">Non connecté.</div>
+</div></div></div>
 <footer>Vos catégories, éléments, notes et croquis sont sauvegardés localement, puis sur Drive</footer>
-
+<div class="overlay" id="notepad-overlay">
+<div class="overlay-header"><h2>📝 Bloc-notes</h2><button class="btn btn-icon btn-secondary" onclick="closeNotepad()">✕</button></div>
+<div class="overlay-toolbar">
+<button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="toggleCase('upper')">MAJ</button>
+<button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="toggleCase('lower')">min</button>
+<input type="color" id="highlight-color" class="color-picker-inline" value="#f5e642" title="Choisir une couleur de surlignage">
+<button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="setHighlightColor('#f5e642')" style="background:#f5e642;color:#222;">Jaune</button>
+<button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="setHighlightColor('#f54242')" style="background:#f54242;color:#fff;">Rouge</button>
+<button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="setHighlightColor('#42f56f')" style="background:#42f56f;color:#222;">Vert</button>
+<button class="btn btn-primary btn-sm" onmousedown="event.preventDefault()" onclick="highlight()">🖊️ Surligner</button>
+<button class="btn btn-secondary btn-sm" onmousedown="event.preventDefault()" onclick="clearHighlight()">Effacer</button>
+<button class="btn btn-primary btn-sm" onclick="saveNoteAndClear()">💾 Enregistrer et nouveau</button>
+</div>
+<div class="overlay-body">
+<div id="notepad" contenteditable="true"></div>
+<div class="save-status" id="save-status">Astuce : sélectionnez du texte, choisissez une couleur, puis touchez Surligner.</div>
+<div class="saved-list"><h3>Notes enregistrées</h3><div id="saved-notes-list"></div></div>
+</div></div>
+<div class="overlay" id="sketch-overlay">
+<div class="overlay-header"><h2>🎨 Croquis</h2><button class="btn btn-icon btn-secondary" onclick="closeSketch()">✕</button></div>
+<div class="sketch-toolbar">
+<label>Couleur <input type="color" id="sketch-color" class="color-picker-inline" value="#000000"></label>
+<label>Épaisseur <input type="range" id="brush-size" min="1" max="20" value="3"></label>
+<button class="btn btn-secondary btn-sm" onclick="clearCanvas()">Effacer</button>
+<button class="btn btn-primary btn-sm" onclick="saveSketchAndClear()">💾 Enregistrer et nouveau</button>
+</div>
+<div class="sketch-overlay-body"><canvas id="sketch-canvas"></canvas></div>
+<div class="save-status" id="sketch-status" style="padding:6px 14px;flex-shrink:0;">Dessinez avec le doigt ou la souris, sur tout l'écran.</div>
+<div class="sketch-saved-panel"><h3 style="margin:0 0 8px 0;font-size:0.9em;color:var(--muted);">Croquis enregistrés</h3><div id="saved-sketches-list"></div></div>
+</div>
 <script>
-const defaultCategories = [
-  { id:"tech", emoji:"💻", label:"Technologie et informatique", items:["IA, ordinateurs quantiques, puissance de calcul","Téléphone portable pliable","Administration Linux (Lubuntu, Plasma X11)","Réseau, WiFi 6, optimisation","Développement web (HTML/JS, PWA)","LLM en local (Ollama, LM Studio)"] },
-  { id:"sciences", emoji:"🔬", label:"Sciences fondamentales et spatial", items:["Atomes, molécules, photons, électrons","Physique quantique","Domaine spatial","Contenus scientifiques et tutoriels techniques"] },
-  { id:"nature", emoji:"🌱", label:"Nature, vivant et jardin technologique", items:["Animaux, insectes","Le végétal","Panneau solaire, pompe à chaleur","Puits canadien ou provençal","Rénovation et amélioration de l'habitat"] },
-  { id:"finance", emoji:"💰", label:"Finance et économie", items:["Bourse, placements","Startups, bitcoin","Intérêt composé"] },
-  { id:"memoire", emoji:"🧠", label:"Cerveau, mémoire et apprentissage", items:["Techniques de mémorisation","Mentalistes, champions de mémoire","Auto-formation Linux et web"] },
-  { id:"bricolage", emoji:"🔧", label:"Bricolage, astuces et réparation", items:["Génie de la réparation (astuces africaines)","Trucs et astuces pratiques","Dépannage technologique","Entretien domestique et laverie"] },
-  { id:"manuel", emoji:"✂️", label:"Travaux manuels et pliage", items:["Les nœuds","Pliage de vêtements et serviettes","Origami papier","Photographie et traitement d'image"] }
-];
-
-const CATS_KEY = 'hobby_categories_v2';
-let categories = [];
-let currentCatId = null;
-let editMode = false;
-
-function loadCategories() {
-  const raw = localStorage.getItem(CATS_KEY);
-  if (raw) {
-    categories = JSON.parse(raw);
-  } else {
-    categories = JSON.parse(JSON.stringify(defaultCategories));
-    saveCategories();
-  }
-}
-function saveCategories() {
-  localStorage.setItem(CATS_KEY, JSON.stringify(categories));
-}
-
-const btnContainer = document.getElementById('btn-container');
-const detailsPanel = document.getElementById('details-panel');
-const notepad = document.getElementById('notepad');
-const saveStatus = document.getElementById('save-status');
-const editModeBtn = document.getElementById('edit-mode-btn');
-
-function toggleSection(bodyId, chevronId) {
-  const body = document.getElementById(bodyId);
-  const chevron = document.getElementById(chevronId);
-  const isHidden = body.classList.contains('hidden');
-  if (isHidden) {
-    body.classList.remove('hidden');
-    chevron.textContent = '▲';
-    if (bodyId === 'sketch-body') setTimeout(initCanvasIfNeeded, 0);
-  } else {
-    body.classList.add('hidden');
-    chevron.textContent = '▼';
-  }
-}
-
-function toggleEditMode() {
-  editMode = !editMode;
-  editModeBtn.classList.toggle('on', editMode);
-  renderButtons();
-  renderDetails();
-}
-
-function renderButtons() {
-  btnContainer.innerHTML = '';
-  categories.forEach(cat => {
-    const wrap = document.createElement('div');
-    wrap.className = 'cat-btn-wrap';
-
-    const btn = document.createElement('button');
-    btn.className = 'cat-btn' + (cat.id === currentCatId ? ' active' : '');
-    btn.innerHTML = `<span class="emoji">${cat.emoji}</span><span>${escapeHtml(cat.label)}</span>`;
-    btn.onclick = () => selectCategory(cat.id);
-    wrap.appendChild(btn);
-
-    if (editMode) {
-      const editBtn = document.createElement('button');
-      editBtn.className = 'cat-edit-btn';
-      editBtn.textContent = '✏️';
-      editBtn.onclick = (e) => { e.stopPropagation(); editCategory(cat.id); };
-      wrap.appendChild(editBtn);
-
-      const delBtn = document.createElement('button');
-      delBtn.className = 'cat-del-btn';
-      delBtn.textContent = '✕';
-      delBtn.onclick = (e) => { e.stopPropagation(); deleteCategory(cat.id); };
-      wrap.appendChild(delBtn);
-    }
-    btnContainer.appendChild(wrap);
-  });
-
-  if (editMode) {
-    const addBtn = document.createElement('button');
-    addBtn.className = 'add-cat-btn';
-    addBtn.textContent = '➕ Ajouter une catégorie';
-    addBtn.onclick = addCategory;
-    btnContainer.appendChild(addBtn);
-  }
-}
-
-function addCategory() {
-  const label = prompt("Nom de la nouvelle catégorie :");
-  if (!label || !label.trim()) return;
-  const emoji = prompt("Emoji pour cette catégorie (ex: 🎯) :", "⭐") || "⭐";
-  const id = 'cat_' + Date.now();
-  categories.push({ id, emoji: emoji.trim(), label: label.trim(), items: [] });
-  saveCategories();
-  renderButtons();
-  selectCategory(id);
-}
-
-function editCategory(catId) {
-  const cat = categories.find(c => c.id === catId);
-  if (!cat) return;
-  const newLabel = prompt("Modifier le nom de la catégorie :", cat.label);
-  if (newLabel === null) return;
-  const newEmoji = prompt("Modifier l'emoji de la catégorie :", cat.emoji);
-  if (newEmoji === null) return;
-  if (newLabel.trim()) cat.label = newLabel.trim();
-  if (newEmoji.trim()) cat.emoji = newEmoji.trim();
-  saveCategories();
-  renderButtons();
-  if (currentCatId === catId) renderDetails();
-}
-
-function deleteCategory(catId) {
-  const cat = categories.find(c => c.id === catId);
-  if (!cat) return;
-  if (!confirm(`Supprimer la catégorie "${cat.label}" et tout son contenu ?`)) return;
-  categories = categories.filter(c => c.id !== catId);
-  saveCategories();
-  if (currentCatId === catId) {
-    currentCatId = null;
-  }
-  renderButtons();
-  renderDetails();
-}
-
-function selectCategory(catId) {
-  currentCatId = (currentCatId === catId) ? null : catId;
-  renderButtons();
-  renderDetails();
-}
-
-function renderDetails() {
-  const cat = categories.find(c => c.id === currentCatId);
-  if (!cat) {
-    detailsPanel.classList.add('hidden');
-    detailsPanel.innerHTML = '';
-    return;
-  }
-  detailsPanel.classList.remove('hidden');
-
-  let html = `<h2>${cat.emoji} ${escapeHtml(cat.label)}</h2><ul class="item-list">`;
-  cat.items.forEach((item, idx) => {
-    html += `<li id="item-${idx}">
-      <span class="item-text">${escapeHtml(item)}</span>
-      ${editMode ? `<span class="item-actions">
-        <button class="edit-btn" onclick="editItem(${idx})">✏️</button>
-        <button class="del-btn" onclick="deleteItem(${idx})">✕</button>
-      </span>` : ''}
-    </li>`;
-  });
-  html += `</ul>`;
-  html += `<div class="add-row">
-              <input type="text" id="new-item-input" placeholder="Ajouter un élément à cette catégorie...">
-              <button onclick="addItem()">Ajouter</button>
-            </div>`;
-  detailsPanel.innerHTML = html;
-
-  const input = document.getElementById('new-item-input');
-  if (input) {
-    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addItem(); });
-  }
-}
-
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function getCurrentCat() {
-  return categories.find(c => c.id === currentCatId);
-}
-
-function addItem() {
-  const input = document.getElementById('new-item-input');
-  const value = input.value.trim();
-  if (!value) return;
-  const cat = getCurrentCat();
-  cat.items.push(value);
-  saveCategories();
-  renderDetails();
-}
-
-function deleteItem(idx) {
-  const cat = getCurrentCat();
-  cat.items.splice(idx, 1);
-  saveCategories();
-  renderDetails();
-}
-
-function editItem(idx) {
-  const cat = getCurrentCat();
-  const li = document.getElementById('item-' + idx);
-  const currentText = cat.items[idx];
-  li.innerHTML = `<input type="text" id="edit-input-${idx}" value="${escapeHtml(currentText)}">
-    <span class="item-actions"><button class="edit-btn" onclick="saveEditItem(${idx})">✔</button></span>`;
-  const editInput = document.getElementById('edit-input-' + idx);
-  editInput.focus();
-  editInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') saveEditItem(idx); });
-}
-
-function saveEditItem(idx) {
-  const cat = getCurrentCat();
-  const editInput = document.getElementById('edit-input-' + idx);
-  const value = editInput.value.trim();
-  if (value) cat.items[idx] = value;
-  saveCategories();
-  renderDetails();
-}
-
-// --- Bloc-notes libre ---
-const NOTES_SAVED_KEY = 'hobby_notes_saved';
-let savedNotes = [];
-
-function loadSavedNotes() {
-  const raw = localStorage.getItem(NOTES_SAVED_KEY);
-  savedNotes = raw ? JSON.parse(raw) : [];
-}
-function persistSavedNotes() {
-  localStorage.setItem(NOTES_SAVED_KEY, JSON.stringify(savedNotes));
-}
-
-function renderSavedNotes() {
-  const container = document.getElementById('saved-notes-list');
-  if (!savedNotes.length) {
-    container.innerHTML = '<div class="hint">Aucune note enregistrée pour le moment.</div>';
-    return;
-  }
-  container.innerHTML = savedNotes.slice().reverse().map(n => {
-    const text = n.html.replace(/<[^>]*>/g, ' ').trim().slice(0, 60) || '(vide)';
-    return `<div class="saved-item">
-      <span class="saved-date">${n.date}</span>
-      <span class="saved-preview" onclick="openSavedNote('${n.id}')">${escapeHtml(text)}</span>
-      <span class="saved-actions">
-        <button class="open-btn" onclick="openSavedNote('${n.id}')">Ouvrir</button>
-        <button class="del-btn" onclick="deleteSavedNote('${n.id}')">✕</button>
-      </span>
-    </div>`;
-  }).join('');
-}
-
-function saveNoteAndClear() {
-  const html = notepad.innerHTML.trim();
-  if (html && html !== '<br>') {
-    savedNotes.push({ id: 'note_' + Date.now(), html, date: new Date().toLocaleString('fr-FR') });
-    persistSavedNotes();
-    renderSavedNotes();
-  }
-  notepad.innerHTML = '';
-  localStorage.setItem('hobby_freenotes', '');
-  saveStatus.textContent = 'Note enregistrée ✓ — espace nettoyé pour une nouvelle note.';
-}
-
-function openSavedNote(id) {
-  const note = savedNotes.find(n => n.id === id);
-  if (!note) return;
-  notepad.innerHTML = note.html;
-  localStorage.setItem('hobby_freenotes', note.html);
-  saveStatus.textContent = 'Note rouverte pour modification.';
-}
-
-function deleteSavedNote(id) {
-  if (!confirm('Supprimer cette note enregistrée ?')) return;
-  savedNotes = savedNotes.filter(n => n.id !== id);
-  persistSavedNotes();
-  renderSavedNotes();
-}
-
-window.addEventListener('load', () => {
-  loadCategories();
-  currentCatId = null;
-  renderButtons();
-  renderDetails();
-
-  const saved = localStorage.getItem('hobby_freenotes');
-  if (saved) notepad.innerHTML = saved;
-  const savedClientId = localStorage.getItem('gdrive_client_id');
-  if (savedClientId) document.getElementById('client_id').value = savedClientId;
-
-  loadSavedNotes();
-  renderSavedNotes();
-  loadSavedSketches();
-  renderSavedSketches();
-});
-
-notepad.addEventListener('input', () => {
-  fixMarkLeak();
-  localStorage.setItem('hobby_freenotes', notepad.innerHTML);
-  saveStatus.textContent = 'Enregistré ✓ (' + new Date().toLocaleTimeString('fr-FR') + ')';
-});
-
-notepad.addEventListener('click', (e) => {
-  const mark = e.target.closest('mark');
-  if (mark) {
-    const parent = mark.parentNode;
-    while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
-    parent.removeChild(mark);
-    localStorage.setItem('hobby_freenotes', notepad.innerHTML);
-    saveStatus.textContent = 'Surlignage retiré ✓';
-  }
-});
-
-function fixMarkLeak() {
-  const sel = window.getSelection();
-  if (!sel.rangeCount || !sel.isCollapsed) return;
-  const range = sel.getRangeAt(0);
-  const node = range.startContainer;
-  if (node.nodeType !== 3) return;
-  const markEl = node.parentElement && node.parentElement.closest ? node.parentElement.closest('mark') : null;
-  if (!markEl || markEl.dataset.lockedLen === undefined) return;
-
-  const lockedLen = parseInt(markEl.dataset.lockedLen, 10);
-  const currentText = markEl.textContent;
-  if (currentText.length <= lockedLen) return;
-
-  const kept = currentText.slice(0, lockedLen);
-  const leaked = currentText.slice(lockedLen);
-  markEl.textContent = kept;
-
-  let plainNode = markEl.nextSibling;
-  if (!(plainNode && plainNode.nodeType === 3)) {
-    plainNode = document.createTextNode('');
-    markEl.parentNode.insertBefore(plainNode, markEl.nextSibling);
-  }
-  plainNode.textContent = leaked + plainNode.textContent;
-
-  const newRange = document.createRange();
-  newRange.setStart(plainNode, leaked.length);
-  newRange.collapse(true);
-  sel.removeAllRanges();
-  sel.addRange(newRange);
-}
-
-function placeCaretAfter(node) {
-  const spacer = document.createTextNode('\u200B');
-  if (node.nextSibling) {
-    node.parentNode.insertBefore(spacer, node.nextSibling);
-  } else {
-    node.parentNode.appendChild(spacer);
-  }
-  const sel = window.getSelection();
-  const newRange = document.createRange();
-  newRange.setStart(spacer, 1);
-  newRange.collapse(true);
-  sel.removeAllRanges();
-  sel.addRange(newRange);
-  notepad.focus();
-}
-
-function toggleCase(mode) {
-  const sel = window.getSelection();
-  if (!sel.rangeCount || sel.isCollapsed) { alert("Sélectionnez du texte d'abord."); return; }
-  const range = sel.getRangeAt(0);
-  const text = range.toString();
-  const newText = mode === 'upper' ? text.toUpperCase() : text.toLowerCase();
-  const span = document.createElement('span');
-  span.textContent = newText;
-  range.deleteContents();
-  range.insertNode(span);
-  placeCaretAfter(span);
-  localStorage.setItem('hobby_freenotes', notepad.innerHTML);
-}
-
-function setHighlightColor(hex) {
-  document.getElementById('highlight-color').value = hex;
-}
-
-function highlight() {
-  const sel = window.getSelection();
-  if (!sel.rangeCount || sel.isCollapsed) { alert("Sélectionnez du texte d'abord."); return; }
-  const color = document.getElementById('highlight-color').value;
-  const range = sel.getRangeAt(0);
-  const mark = document.createElement('mark');
-  mark.style.backgroundColor = color;
-  mark.style.color = isColorDark(color) ? '#fff' : '#222';
-  mark.title = "Touchez pour retirer le surlignage";
-  mark.appendChild(range.extractContents());
-  mark.dataset.lockedLen = mark.textContent.length;
-  range.insertNode(mark);
-  placeCaretAfter(mark);
-  localStorage.setItem('hobby_freenotes', notepad.innerHTML);
-}
-
-function isColorDark(hex) {
-  const c = hex.replace('#','');
-  const r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
-  return (0.299*r + 0.587*g + 0.114*b) < 140;
-}
-
-function clearHighlight() {
-  notepad.querySelectorAll('mark').forEach(mark => {
-    const parent = mark.parentNode;
-    while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
-    parent.removeChild(mark);
-  });
-  localStorage.setItem('hobby_freenotes', notepad.innerHTML);
-  saveStatus.textContent = 'Tous les surlignages ont été retirés ✓';
-}
-
-// --- Croquis (dessin à main levée) ---
-const SKETCHES_SAVED_KEY = 'hobby_sketches_saved';
-let savedSketches = [];
-let canvas, ctx, drawing = false, lastX = 0, lastY = 0, canvasInitialized = false;
-
-function initCanvasIfNeeded() {
-  if (canvasInitialized) return;
-  canvas = document.getElementById('sketch-canvas');
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * 2;
-  canvas.height = rect.height * 2;
-  ctx = canvas.getContext('2d');
-  ctx.scale(2, 2);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-
-  canvas.addEventListener('pointerdown', startDraw);
-  canvas.addEventListener('pointermove', draw);
-  window.addEventListener('pointerup', stopDraw);
-  canvas.addEventListener('pointerleave', stopDraw);
-  canvasInitialized = true;
-}
-
-function getPos(e) {
-  const rect = canvas.getBoundingClientRect();
-  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-}
-
-function startDraw(e) {
-  drawing = true;
-  const pos = getPos(e);
-  lastX = pos.x; lastY = pos.y;
-  e.preventDefault();
-}
-
-function draw(e) {
-  if (!drawing) return;
-  const pos = getPos(e);
-  ctx.strokeStyle = document.getElementById('sketch-color').value;
-  ctx.lineWidth = document.getElementById('brush-size').value;
-  ctx.beginPath();
-  ctx.moveTo(lastX, lastY);
-  ctx.lineTo(pos.x, pos.y);
-  ctx.stroke();
-  lastX = pos.x; lastY = pos.y;
-  e.preventDefault();
-}
-
-function stopDraw() {
-  drawing = false;
-}
-
-function clearCanvas() {
-  if (!canvasInitialized) return;
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  document.getElementById('sketch-status').textContent = 'Espace nettoyé, à vous de dessiner.';
-}
-
-function loadSavedSketches() {
-  const raw = localStorage.getItem(SKETCHES_SAVED_KEY);
-  savedSketches = raw ? JSON.parse(raw) : [];
-}
-function persistSavedSketches() {
-  localStorage.setItem(SKETCHES_SAVED_KEY, JSON.stringify(savedSketches));
-}
-
-function renderSavedSketches() {
-  const container = document.getElementById('saved-sketches-list');
-  if (!savedSketches.length) {
-    container.innerHTML = '<div class="hint">Aucun croquis enregistré pour le moment.</div>';
-    return;
-  }
-  container.innerHTML = savedSketches.slice().reverse().map(s => {
-    return `<div class="saved-item">
-      <img class="thumb" src="${s.dataUrl}" onclick="openSavedSketch('${s.id}')">
-      <span class="saved-date">${s.date}</span>
-      <span class="saved-preview"></span>
-      <span class="saved-actions">
-        <button class="open-btn" onclick="openSavedSketch('${s.id}')">Ouvrir</button>
-        <button class="del-btn" onclick="deleteSavedSketch('${s.id}')">✕</button>
-      </span>
-    </div>`;
-  }).join('');
-}
-
-function saveSketchAndClear() {
-  initCanvasIfNeeded();
-  const dataUrl = canvas.toDataURL('image/png');
-  savedSketches.push({ id: 'sketch_' + Date.now(), dataUrl, date: new Date().toLocaleString('fr-FR') });
-  persistSavedSketches();
-  renderSavedSketches();
-  clearCanvas();
-  document.getElementById('sketch-status').textContent = 'Croquis enregistré ✓ — espace nettoyé pour un nouveau dessin.';
-}
-
-function openSavedSketch(id) {
-  initCanvasIfNeeded();
-  const sketch = savedSketches.find(s => s.id === id);
-  if (!sketch) return;
-  const img = new Image();
-  img.onload = () => {
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    document.getElementById('sketch-status').textContent = 'Croquis rouvert pour modification.';
-  };
-  img.src = sketch.dataUrl;
-}
-
-function deleteSavedSketch(id) {
-  if (!confirm('Supprimer ce croquis enregistré ?')) return;
-  savedSketches = savedSketches.filter(s => s.id !== id);
-  persistSavedSketches();
-  renderSavedSketches();
-}
-
-// --- Google Drive Sync ---
-let accessToken = null;
-const SCOPES = "https://www.googleapis.com/auth/drive.file";
-
-function handleAuth() {
-  const clientId = document.getElementById('client_id').value.trim();
-  if (!clientId) { alert("Merci de coller votre Client ID Google d'abord."); return; }
-  localStorage.setItem('gdrive_client_id', clientId);
-
-  const client = google.accounts.oauth2.initTokenClient({
-    client_id: clientId,
-    scope: SCOPES,
-    callback: (response) => {
-      if (response.access_token) {
-        accessToken = response.access_token;
-        document.getElementById('status').textContent = "Connecté à Google Drive.";
-        document.getElementById('sync_button').disabled = false;
-      }
-    },
-  });
-  client.requestAccessToken();
-}
-
-async function driveFetch(url, options = {}) {
-  options.headers = Object.assign({}, options.headers, { 'Authorization': 'Bearer ' + accessToken });
-  const res = await fetch(url, options);
-  return res.json();
-}
-
-async function findOrCreateFolder(name, parentId) {
-  const q = encodeURIComponent(`name='${name.replace(/'/g,"\\'")}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`);
-  const search = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
-  if (search.files && search.files.length > 0) return search.files[0].id;
-  const meta = { name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] };
-  const created = await driveFetch('https://www.googleapis.com/drive/v3/files', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(meta)
-  });
-  return created.id;
-}
-
-async function findFileInFolder(name, folderId) {
-  const q = encodeURIComponent(`name='${name.replace(/'/g,"\\'")}' and '${folderId}' in parents and trashed=false`);
-  const search = await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
-  return (search.files && search.files.length > 0) ? search.files[0].id : null;
-}
-
-async function createDocInFolder(name, content, folderId) {
-  const boundary = '-------314159265358979323846';
-  const metadata = { name, mimeType: 'application/vnd.google-apps.document', parents: [folderId] };
-  const multipartBody =
-    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n` +
-    `--${boundary}\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n${content}\r\n--${boundary}--`;
-  return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-    method: 'POST',
-    headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-    body: multipartBody
-  });
-}
-
-async function updateDocContent(fileId, content) {
-  return driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'text/html; charset=UTF-8' },
-    body: content
-  });
-}
-
-async function upsertDocInFolder(name, content, folderId) {
-  const existingId = await findFileInFolder(name, folderId);
-  if (existingId) {
-    await updateDocContent(existingId, content);
-  } else {
-    await createDocInFolder(name, content, folderId);
-  }
-}
-
-async function findImageInFolder(name, folderId) {
-  return findFileInFolder(name, folderId);
-}
-
-async function uploadImageToFolder(name, dataUrl, folderId) {
-  const base64 = dataUrl.split(',')[1];
-  const byteChars = atob(base64);
-  const byteNumbers = new Array(byteChars.length);
-  for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-  const byteArray = new Uint8Array(byteNumbers);
-  const boundary = '-------314159265358979323846';
-  const metadata = { name, parents: [folderId] };
-  const metaPart = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: image/png\r\n\r\n`;
-  const endPart = `\r\n--${boundary}--`;
-  const blob = new Blob([metaPart, byteArray, endPart], { type: `multipart/related; boundary=${boundary}` });
-  return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-    method: 'POST',
-    headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-    body: blob
-  });
-}
-
-async function syncAllToDrive() {
-  const statusEl = document.getElementById('status');
-  statusEl.textContent = "Synchronisation en cours...";
-  try {
-    const rootId = await findOrCreateFolder('Mes Hobbies', 'root');
-
-    for (const cat of categories) {
-      const folderId = await findOrCreateFolder(cat.label, rootId);
-      const htmlContent = `<h1>${cat.emoji} ${cat.label}</h1><ul>${cat.items.map(i => `<li>${i}</li>`).join('') || '<li>(aucun élément)</li>'}</ul>`;
-      await upsertDocInFolder(cat.label, htmlContent, folderId);
-    }
-
-    const freeNotes = localStorage.getItem('hobby_freenotes') || '<p>(vide)</p>';
-    const notesHtml = `<h1>📝 Bloc-notes (en cours)</h1>${freeNotes}`;
-    await upsertDocInFolder('Bloc-notes', notesHtml, rootId);
-
-    const notesFolderId = await findOrCreateFolder('Bloc-notes enregistrés', rootId);
-    for (const n of savedNotes) {
-      await upsertDocInFolder('Note ' + n.date, `<h1>📝 Note du ${n.date}</h1>${n.html}`, notesFolderId);
-    }
-
-    const sketchFolderId = await findOrCreateFolder('Croquis enregistrés', rootId);
-    for (const s of savedSketches) {
-      const existing = await findImageInFolder('Croquis ' + s.date + '.png', sketchFolderId);
-      if (!existing) await uploadImageToFolder('Croquis ' + s.date + '.png', s.dataUrl, sketchFolderId);
-    }
-
-    statusEl.textContent = "Synchronisation terminée ! Catégories, Bloc-notes et Croquis sont à jour sur Drive.";
-  } catch (e) {
-    statusEl.textContent = "Erreur pendant la synchronisation : " + e.message;
-  }
-}
+const defaultCategories=[{id:"tech",emoji:"💻",label:"Technologie et informatique",items:["IA, ordinateurs quantiques, puissance de calcul","Téléphone portable pliable","Administration Linux (Lubuntu, Plasma X11)","Réseau, WiFi 6, optimisation","Développement web (HTML/JS, PWA)","LLM en local (Ollama, LM Studio)"]},{id:"sciences",emoji:"🔬",label:"Sciences fondamentales et spatial",items:["Atomes, molécules, photons, électrons","Physique quantique","Domaine spatial","Contenus scientifiques et tutoriels techniques"]},{id:"nature",emoji:"🌱",label:"Nature, vivant et jardin technologique",items:["Animaux, insectes","Le végétal","Panneau solaire, pompe à chaleur","Puits canadien ou provençal","Rénovation et amélioration de l'habitat"]},{id:"finance",emoji:"💰",label:"Finance et économie",items:["Bourse, placements","Startups, bitcoin","Intérêt composé"]},{id:"memoire",emoji:"🧠",label:"Cerveau, mémoire et apprentissage",items:["Techniques de mémorisation","Mentalistes, champions de mémoire","Auto-formation Linux et web"]},{id:"bricolage",emoji:"🔧",label:"Bricolage, astuces et réparation",items:["Génie de la réparation (astuces africaines)","Trucs et astuces pratiques","Dépannage technologique","Entretien domestique et laverie"]},{id:"manuel",emoji:"✂️",label:"Travaux manuels et pliage",items:["Les nœuds","Pliage de vêtements et serviettes","Origami papier","Photographie et traitement d'image"]}];
+const CATS_KEY='hobby_categories_v2';let categories=[];let currentCatId=null;let editMode=false;
+function loadCategories(){const raw=localStorage.getItem(CATS_KEY);if(raw){try{categories=JSON.parse(raw);}catch(e){categories=JSON.parse(JSON.stringify(defaultCategories));}}else{categories=JSON.parse(JSON.stringify(defaultCategories));saveCategories();}}
+function saveCategories(){localStorage.setItem(CATS_KEY,JSON.stringify(categories));}
+const btnContainer=document.getElementById('btn-container');const detailsPanel=document.getElementById('details-panel');const notepad=document.getElementById('notepad');const saveStatus=document.getElementById('save-status');const editModeBtn=document.getElementById('edit-mode-btn');
+function toggleSection(bodyId,chevronId){const body=document.getElementById(bodyId);const chevron=document.getElementById(chevronId);const isHidden=body.classList.contains('hidden');if(isHidden){body.classList.remove('hidden');chevron.textContent='▲';}else{body.classList.add('hidden');chevron.textContent='▼';}}
+function toggleEditMode(){editMode=!editMode;editModeBtn.classList.toggle('on',editMode);renderButtons();renderDetails();}
+function renderButtons(){btnContainer.innerHTML='';categories.forEach(cat=>{const wrap=document.createElement('div');wrap.className='cat-btn-wrap';const btn=document.createElement('button');btn.className='cat-btn'+(cat.id===currentCatId?' active':'');btn.innerHTML=`<span class="emoji">${cat.emoji}</span><span>${escapeHtml(cat.label)}</span>`;btn.onclick=()=>selectCategory(cat.id);wrap.appendChild(btn);if(editMode){const editBtn=document.createElement('button');editBtn.className='cat-edit-btn';editBtn.textContent='✏️';editBtn.onclick=(e)=>{e.stopPropagation();editCategory(cat.id);};wrap.appendChild(editBtn);const delBtn=document.createElement('button');delBtn.className='cat-del-btn';delBtn.textContent='✕';delBtn.onclick=(e)=>{e.stopPropagation();deleteCategory(cat.id);};wrap.appendChild(delBtn);}btnContainer.appendChild(wrap);});if(editMode){const addBtn=document.createElement('button');addBtn.className='add-cat-btn';addBtn.textContent='➕ Ajouter une catégorie';addBtn.onclick=addCategory;btnContainer.appendChild(addBtn);}}
+function addCategory(){const label=prompt("Nom de la nouvelle catégorie :");if(!label||!label.trim())return;const emoji=prompt("Emoji pour cette catégorie (ex: 🎯) :","⭐")||"⭐";const id='cat_'+Date.now();categories.push({id,emoji:emoji.trim(),label:label.trim(),items:[]});saveCategories();renderButtons();selectCategory(id);}
+function editCategory(catId){const cat=categories.find(c=>c.id===catId);if(!cat)return;const newLabel=prompt("Modifier le nom de la catégorie :",cat.label);if(newLabel===null)return;const newEmoji=prompt("Modifier l'emoji de la catégorie :",cat.emoji);if(newEmoji===null)return;if(newLabel.trim())cat.label=newLabel.trim();if(newEmoji.trim())cat.emoji=newEmoji.trim();saveCategories();renderButtons();if(currentCatId===catId)renderDetails();}
+function deleteCategory(catId){const cat=categories.find(c=>c.id===catId);if(!cat)return;if(!confirm(`Supprimer la catégorie "${cat.label}" et tout son contenu ?`))return;categories=categories.filter(c=>c.id!==catId);saveCategories();if(currentCatId===catId)currentCatId=null;renderButtons();renderDetails();}
+function selectCategory(catId){currentCatId=(currentCatId===catId)?null:catId;renderButtons();renderDetails();}
+function renderDetails(){const cat=categories.find(c=>c.id===currentCatId);if(!cat){detailsPanel.classList.add('hidden');detailsPanel.innerHTML='';return;}detailsPanel.classList.remove('hidden');let html=`<h2>${cat.emoji} ${escapeHtml(cat.label)}</h2><ul class="item-list">`;cat.items.forEach((item,idx)=>{html+=`<li id="item-${idx}"><span class="item-text">${escapeHtml(item)}</span>${editMode?`<span class="item-actions"><button class="btn btn-icon btn-secondary btn-sm" onclick="editItem(${idx})">✏️</button><button class="btn btn-icon btn-danger btn-sm" onclick="deleteItem(${idx})">✕</button></span>`:''}</li>`;});html+=`</ul>`;html+=`<div class="add-row"><input type="text" id="new-item-input" placeholder="Ajouter un élément à cette catégorie..."><button class="btn btn-primary" onclick="addItem()">Ajouter</button></div>`;detailsPanel.innerHTML=html;const input=document.getElementById('new-item-input');if(input)input.addEventListener('keypress',(e)=>{if(e.key==='Enter')addItem();});}
+function escapeHtml(str){const div=document.createElement('div');div.textContent=str;return div.innerHTML;}
+function getCurrentCat(){return categories.find(c=>c.id===currentCatId);}
+function addItem(){const input=document.getElementById('new-item-input');const value=input.value.trim();if(!value)return;getCurrentCat().items.push(value);saveCategories();renderDetails();}
+function deleteItem(idx){getCurrentCat().items.splice(idx,1);saveCategories();renderDetails();}
+function editItem(idx){const cat=getCurrentCat();const li=document.getElementById('item-'+idx);const currentText=cat.items[idx];li.innerHTML=`<input type="text" id="edit-input-${idx}" value="${escapeHtml(currentText)}"><span class="item-actions"><button class="btn btn-icon btn-primary btn-sm" onclick="saveEditItem(${idx})">✔</button></span>`;const editInput=document.getElementById('edit-input-'+idx);editInput.focus();editInput.addEventListener('keypress',(e)=>{if(e.key==='Enter')saveEditItem(idx);});}
+function saveEditItem(idx){const cat=getCurrentCat();const value=document.getElementById('edit-input-'+idx).value.trim();if(value)cat.items[idx]=value;saveCategories();renderDetails();}
+const NOTES_SAVED_KEY='hobby_notes_saved';let savedNotes=[];let savedRange=null;
+function loadSavedNotes(){const raw=localStorage.getItem(NOTES_SAVED_KEY);try{savedNotes=raw?JSON.parse(raw):[];}catch(e){savedNotes=[];}}
+function persistSavedNotes(){try{localStorage.setItem(NOTES_SAVED_KEY,JSON.stringify(savedNotes));}catch(e){alert("Stockage plein : impossible d'enregistrer plus de notes. Supprimez-en une ancienne.");}}
+function renderSavedNotes(){const container=document.getElementById('saved-notes-list');if(!savedNotes.length){container.innerHTML='<div class="hint">Aucune note enregistrée pour le moment.</div>';return;}container.innerHTML=savedNotes.slice().reverse().map(n=>{const text=n.html.replace(/<[^>]*>/g,' ').trim().slice(0,60)||'(vide)';return `<div class="saved-item"><span class="saved-date">${n.date}</span><span class="saved-preview" onclick="openSavedNote('${n.id}')">${escapeHtml(text)}</span><span class="saved-actions"><button class="btn btn-secondary btn-sm" onclick="openSavedNote('${n.id}')">Ouvrir</button><button class="btn btn-icon btn-danger btn-sm" onclick="deleteSavedNote('${n.id}')">✕</button></span></div>`;}).join('');}
+function saveNoteAndClear(){const html=notepad.innerHTML.trim();if(html&&html!=='<br>'){savedNotes.push({id:'note_'+Date.now(),html,date:new Date().toLocaleString('fr-FR')});persistSavedNotes();renderSavedNotes();}notepad.innerHTML='';localStorage.setItem('hobby_freenotes','');saveStatus.textContent='Note enregistrée ✓ — espace nettoyé pour une nouvelle note.';}
+function openSavedNote(id){const note=savedNotes.find(n=>n.id===id);if(!note)return;notepad.innerHTML=note.html;localStorage.setItem('hobby_freenotes',note.html);saveStatus.textContent='Note rouverte pour modification.';}
+function deleteSavedNote(id){if(!confirm('Supprimer cette note enregistrée ?'))return;savedNotes=savedNotes.filter(n=>n.id!==id);persistSavedNotes();renderSavedNotes();}
+function openNotepad(){document.getElementById('notepad-overlay').classList.add('open');document.body.style.overflow='hidden';setTimeout(()=>notepad.focus(),50);}
+function closeNotepad(){document.getElementById('notepad-overlay').classList.remove('open');document.body.style.overflow='';}
+document.addEventListener('selectionchange',()=>{const sel=window.getSelection();if(sel.rangeCount>0&&notepad.contains(sel.anchorNode)&&!sel.isCollapsed){savedRange=sel.getRangeAt(0).cloneRange();}});
+function getActiveRange(){const sel=window.getSelection();if(sel.rangeCount&&!sel.isCollapsed&&notepad.contains(sel.anchorNode)){return sel.getRangeAt(0);}return savedRange;}
+notepad.addEventListener('input',()=>{fixMarkLeak();localStorage.setItem('hobby_freenotes',notepad.innerHTML);saveStatus.textContent='Enregistré ✓ ('+new Date().toLocaleTimeString('fr-FR')+')';});
+notepad.addEventListener('click',(e)=>{const mark=e.target.closest('mark');if(mark){const parent=mark.parentNode;while(mark.firstChild)parent.insertBefore(mark.firstChild,mark);parent.removeChild(mark);localStorage.setItem('hobby_freenotes',notepad.innerHTML);saveStatus.textContent='Surlignage retiré ✓';}});
+function fixMarkLeak(){const sel=window.getSelection();if(!sel.rangeCount||!sel.isCollapsed)return;const range=sel.getRangeAt(0);const node=range.startContainer;if(node.nodeType!==3)return;const markEl=node.parentElement&&node.parentElement.closest?node.parentElement.closest('mark'):null;if(!markEl||markEl.dataset.lockedLen===undefined)return;const lockedLen=parseInt(markEl.dataset.lockedLen,10);const currentText=markEl.textContent;if(currentText.length<=lockedLen)return;const kept=currentText.slice(0,lockedLen);const leaked=currentText.slice(lockedLen);markEl.textContent=kept;let plainNode=markEl.nextSibling;if(!(plainNode&&plainNode.nodeType===3)){plainNode=document.createTextNode('');markEl.parentNode.insertBefore(plainNode,markEl.nextSibling);}plainNode.textContent=leaked+plainNode.textContent;const newRange=document.createRange();newRange.setStart(plainNode,leaked.length);newRange.collapse(true);sel.removeAllRanges();sel.addRange(newRange);}
+function placeCaretAfter(node){const spacer=document.createTextNode('\u200B');if(node.nextSibling)node.parentNode.insertBefore(spacer,node.nextSibling);else node.parentNode.appendChild(spacer);const sel=window.getSelection();const newRange=document.createRange();newRange.setStart(spacer,1);newRange.collapse(true);sel.removeAllRanges();sel.addRange(newRange);notepad.focus();}
+function toggleCase(mode){const range=getActiveRange();if(!range){alert("Sélectionnez du texte d'abord.");return;}const text=range.toString();if(!text){alert("Sélectionnez du texte d'abord.");return;}const newText=mode==='upper'?text.toUpperCase():text.toLowerCase();const span=document.createElement('span');span.textContent=newText;range.deleteContents();range.insertNode(span);savedRange=null;placeCaretAfter(span);localStorage.setItem('hobby_freenotes',notepad.innerHTML);}
+function setHighlightColor(hex){document.getElementById('highlight-color').value=hex;}
+function highlight(){const range=getActiveRange();if(!range){alert("Sélectionnez du texte d'abord.");return;}const text=range.toString();if(!text){alert("Sélectionnez du texte d'abord.");return;}const color=document.getElementById('highlight-color').value;const mark=document.createElement('mark');mark.style.backgroundColor=color;mark.style.color=isColorDark(color)?'#fff':'#222';mark.title="Touchez pour retirer le surlignage";mark.appendChild(range.extractContents());mark.dataset.lockedLen=mark.textContent.length;range.insertNode(mark);savedRange=null;placeCaretAfter(mark);localStorage.setItem('hobby_freenotes',notepad.innerHTML);}
+function isColorDark(hex){const c=hex.replace('#','');const r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);return (0.299*r+0.587*g+0.114*b)<140;}
+function clearHighlight(){notepad.querySelectorAll('mark').forEach(mark=>{const parent=mark.parentNode;while(mark.firstChild)parent.insertBefore(mark.firstChild,mark);parent.removeChild(mark);});localStorage.setItem('hobby_freenotes',notepad.innerHTML);saveStatus.textContent='Tous les surlignages ont été retirés ✓';}
+const SKETCHES_SAVED_KEY='hobby_sketches_saved';let savedSketches=[];let canvas,ctx,drawing=false,lastX=0,lastY=0,canvasInitialized=false;
+function openSketch(){document.getElementById('sketch-overlay').classList.add('open');document.body.style.overflow='hidden';setTimeout(()=>{initCanvasIfNeeded(true);},50);}
+function closeSketch(){document.getElementById('sketch-overlay').classList.remove('open');document.body.style.overflow='';}
+function initCanvasIfNeeded(forceResize){canvas=document.getElementById('sketch-canvas');if(canvasInitialized&&!forceResize)return;const rect=canvas.getBoundingClientRect();let prevData=null;if(canvasInitialized&&canvas.width>0){try{prevData=canvas.toDataURL();}catch(e){}}canvas.width=Math.max(rect.width,1);canvas.height=Math.max(rect.height,1);ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.lineCap='round';ctx.lineJoin='round';if(prevData){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,canvas.width,canvas.height);img.src=prevData;}if(!canvasInitialized){canvas.addEventListener('pointerdown',startDraw);canvas.addEventListener('pointermove',draw);window.addEventListener('pointerup',stopDraw);canvas.addEventListener('pointerleave',stopDraw);window.addEventListener('resize',()=>initCanvasIfNeeded(true));}canvasInitialized=true;}
+function getPos(e){const rect=canvas.getBoundingClientRect();return {x:e.clientX-rect.left,y:e.clientY-rect.top};}
+function startDraw(e){drawing=true;const pos=getPos(e);lastX=pos.x;lastY=pos.y;ctx.strokeStyle=document.getElementById('sketch-color').value;ctx.lineWidth=document.getElementById('brush-size').value;ctx.beginPath();ctx.arc(pos.x,pos.y,ctx.lineWidth/2,0,Math.PI*2);ctx.fillStyle=ctx.strokeStyle;ctx.fill();e.preventDefault();}
+function draw(e){if(!drawing)return;const pos=getPos(e);ctx.strokeStyle=document.getElementById('sketch-color').value;ctx.lineWidth=document.getElementById('brush-size').value;ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(pos.x,pos.y);ctx.stroke();lastX=pos.x;lastY=pos.y;e.preventDefault();}
+function stopDraw(){drawing=false;}
+function clearCanvas(){if(!canvasInitialized)return;ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);document.getElementById('sketch-status').textContent='Espace nettoyé, à vous de dessiner.';}
+function loadSavedSketches(){const raw=localStorage.getItem(SKETCHES_SAVED_KEY);try{savedSketches=raw?JSON.parse(raw):[];}catch(e){savedSketches=[];}}
+function persistSavedSketches(){try{localStorage.setItem(SKETCHES_SAVED_KEY,JSON.stringify(savedSketches));}catch(e){savedSketches.shift();try{localStorage.setItem(SKETCHES_SAVED_KEY,JSON.stringify(savedSketches));}catch(e2){alert("Stockage plein : supprimez un ancien croquis pour libérer de la place.");}}}
+function renderSavedSketches(){const container=document.getElementById('saved-sketches-list');if(!savedSketches.length){container.innerHTML='<div class="hint">Aucun croquis enregistré pour le moment.</div>';return;}container.innerHTML=savedSketches.slice().reverse().map(s=>{return `<div class="saved-item"><img class="thumb" src="${s.dataUrl}" onclick="openSavedSketch('${s.id}')"><span class="saved-date">${s.date}</span><span class="saved-preview"></span><span class="saved-actions"><button class="btn btn-secondary btn-sm" onclick="openSavedSketch('${s.id}')">Ouvrir</button><button class="btn btn-icon btn-danger btn-sm" onclick="deleteSavedSketch('${s.id}')">✕</button></span></div>`;}).join('');}
+function saveSketchAndClear(){initCanvasIfNeeded();const dataUrl=canvas.toDataURL('image/jpeg',0.82);savedSketches.push({id:'sketch_'+Date.now(),dataUrl,date:new Date().toLocaleString('fr-FR')});persistSavedSketches();renderSavedSketches();clearCanvas();document.getElementById('sketch-status').textContent='Croquis enregistré ✓ — espace nettoyé pour un nouveau dessin.';}
+function openSavedSketch(id){initCanvasIfNeeded();const sketch=savedSketches.find(s=>s.id===id);if(!sketch)return;const img=new Image();img.onload=()=>{ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);document.getElementById('sketch-status').textContent='Croquis rouvert pour modification.';};img.src=sketch.dataUrl;openSketch();}
+function deleteSavedSketch(id){if(!confirm('Supprimer ce croquis enregistré ?'))return;savedSketches=savedSketches.filter(s=>s.id!==id);persistSavedSketches();renderSavedSketches();}
+window.addEventListener('load',()=>{loadCategories();currentCatId=null;renderButtons();renderDetails();const saved=localStorage.getItem('hobby_freenotes');if(saved)notepad.innerHTML=saved;const savedClientId=localStorage.getItem('gdrive_client_id');if(savedClientId)document.getElementById('client_id').value=savedClientId;loadSavedNotes();renderSavedNotes();loadSavedSketches();renderSavedSketches();});
+let accessToken=null;const SCOPES="https://www.googleapis.com/auth/drive.file";
+function handleAuth(){const clientId=document.getElementById('client_id').value.trim();if(!clientId){alert("Merci de coller votre Client ID Google d'abord.");return;}localStorage.setItem('gdrive_client_id',clientId);const client=google.accounts.oauth2.initTokenClient({client_id:clientId,scope:SCOPES,callback:(response)=>{if(response.access_token){accessToken=response.access_token;document.getElementById('status').textContent="Connecté à Google Drive.";document.getElementById('sync_button').disabled=false;}},});client.requestAccessToken();}
+async function driveFetch(url,options={}){options.headers=Object.assign({},options.headers,{'Authorization':'Bearer '+accessToken});const res=await fetch(url,options);return res.json();}
+async function findOrCreateFolder(name,parentId){const q=encodeURIComponent(`name='${name.replace(/'/g,"\\'")}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`);const search=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);if(search.files&&search.files.length>0)return search.files[0].id;const meta={name,mimeType:'application/vnd.google-apps.folder',parents:[parentId]};const created=await driveFetch('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(meta)});return created.id;}
+async function findFileInFolder(name,folderId){const q=encodeURIComponent(`name='${name.replace(/'/g,"\\'")}' and '${folderId}' in parents and trashed=false`);const search=await driveFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);return (search.files&&search.files.length>0)?search.files[0].id:null;}
+async function createDocInFolder(name,content,folderId){const boundary='-------314159265358979323846';const metadata={name,mimeType:'application/vnd.google-apps.document',parents:[folderId]};const multipartBody=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`+`--${boundary}\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n${content}\r\n--${boundary}--`;return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':`multipart/related; boundary=${boundary}`},body:multipartBody});}
+async function updateDocContent(fileId,content){return driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'text/html; charset=UTF-8'},body:content});}
+async function upsertDocInFolder(name,content,folderId){const existingId=await findFileInFolder(name,folderId);if(existingId)await updateDocContent(existingId,content);else await createDocInFolder(name,content,folderId);}
+async function uploadImageToFolder(name,dataUrl,folderId){const base64=dataUrl.split(',')[1];const byteChars=atob(base64);const byteNumbers=new Array(byteChars.length);for(let i=0;i<byteChars.length;i++)byteNumbers[i]=byteChars.charCodeAt(i);const byteArray=new Uint8Array(byteNumbers);const boundary='-------314159265358979323846';const metadata={name,parents:[folderId]};const metaPart=`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: image/jpeg\r\n\r\n`;const endPart=`\r\n--${boundary}--`;const blob=new Blob([metaPart,byteArray,endPart],{type:`multipart/related; boundary=${boundary}`});return driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':`multipart/related; boundary=${boundary}`},body:blob});}
+async function syncAllToDrive(){const statusEl=document.getElementById('status');statusEl.textContent="Synchronisation en cours...";try{const rootId=await findOrCreateFolder('Mes Hobbies','root');for(const cat of categories){const folderId=await findOrCreateFolder(cat.label,rootId);const htmlContent=`<h1>${cat.emoji} ${cat.label}</h1><ul>${cat.items.map(i=>`<li>${i}</li>`).join('')||'<li>(aucun élément)</li>'}</ul>`;await upsertDocInFolder(cat.label,htmlContent,folderId);}const freeNotes=localStorage.getItem('hobby_freenotes')||'<p>(vide)</p>';const notesHtml=`<h1>📝 Bloc-notes (en cours)</h1>${freeNotes}`;await upsertDocInFolder('Bloc-notes',notesHtml,rootId);const notesFolderId=await findOrCreateFolder('Bloc-notes enregistrés',rootId);for(const n of savedNotes){await upsertDocInFolder('Note '+n.date,`<h1>📝 Note du ${n.date}</h1>${n.html}`,notesFolderId);}const sketchFolderId=await findOrCreateFolder('Croquis enregistrés',rootId);for(const s of savedSketches){const fname='Croquis '+s.date+'.jpg';const existing=await findFileInFolder(fname,sketchFolderId);if(!existing)await uploadImageToFolder(fname,s.dataUrl,sketchFolderId);}statusEl.textContent="Synchronisation terminée ! Catégories, Bloc-notes et Croquis sont à jour sur Drive.";}catch(e){statusEl.textContent="Erreur pendant la synchronisation : "+e.message;}}
 </script>
 </body>
 </html>
