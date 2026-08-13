@@ -48,7 +48,11 @@
   .hint { color:var(--muted); font-size:0.8em; margin-top:8px; }
 
   .notes-section { padding:16px; background:var(--panel); border-radius:12px; }
-  .notes-section h2 { color:var(--accent); margin-top:0; margin-bottom:10px; font-size:1.1em; }
+  #notepad-toggle-btn { width:100%; text-align:left; background:none; border:none; color:var(--accent);
+             font-size:1.1em; font-weight:bold; cursor:pointer; padding:0; display:flex; align-items:center; gap:8px; }
+  #notepad-toggle-btn .chevron { font-size:0.8em; color:var(--muted); margin-left:auto; }
+  .notepad-body { margin-top:12px; }
+  .notepad-body.hidden { display:none; }
   .toolbar { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
   .toolbar button { padding:9px 10px; border:none; border-radius:6px; cursor:pointer; font-size:0.85em; background:#3a3a52; color:var(--text); }
   .swatch-yellow { background:#f5e642 !important; color:#222 !important; }
@@ -87,17 +91,22 @@
   <div class="details hidden" id="details-panel"></div>
 
   <div class="notes-section">
-    <h2>📝 Bloc-notes</h2>
-    <div class="toolbar">
-      <button onclick="toggleCase('upper')">MAJ</button>
-      <button onclick="toggleCase('lower')">min</button>
-      <button class="swatch-yellow" onclick="highlight('yellow')">Jaune</button>
-      <button class="swatch-red" onclick="highlight('red')">Rouge</button>
-      <button class="swatch-green" onclick="highlight('green')">Vert</button>
-      <button class="swatch-clear" onclick="clearHighlight()">Effacer</button>
+    <button id="notepad-toggle-btn" onclick="toggleNotepad()">
+      <span>📝 Bloc-notes</span>
+      <span class="chevron" id="notepad-chevron">▼</span>
+    </button>
+    <div class="notepad-body hidden" id="notepad-body">
+      <div class="toolbar">
+        <button onclick="toggleCase('upper')">MAJ</button>
+        <button onclick="toggleCase('lower')">min</button>
+        <button class="swatch-yellow" onclick="highlight('yellow')">Jaune</button>
+        <button class="swatch-red" onclick="highlight('red')">Rouge</button>
+        <button class="swatch-green" onclick="highlight('green')">Vert</button>
+        <button class="swatch-clear" onclick="clearHighlight()">Effacer</button>
+      </div>
+      <div id="notepad" contenteditable="true"></div>
+      <div class="save-status" id="save-status">Astuce : touchez un mot surligné pour retirer sa couleur.</div>
     </div>
-    <div id="notepad" contenteditable="true"></div>
-    <div class="save-status" id="save-status">Astuce : touchez un mot surligné pour retirer sa couleur.</div>
   </div>
 
   <div class="drive-section">
@@ -148,6 +157,19 @@ const detailsPanel = document.getElementById('details-panel');
 const notepad = document.getElementById('notepad');
 const saveStatus = document.getElementById('save-status');
 const editModeBtn = document.getElementById('edit-mode-btn');
+const notepadBody = document.getElementById('notepad-body');
+const notepadChevron = document.getElementById('notepad-chevron');
+
+function toggleNotepad() {
+  const isHidden = notepadBody.classList.contains('hidden');
+  if (isHidden) {
+    notepadBody.classList.remove('hidden');
+    notepadChevron.textContent = '▲';
+  } else {
+    notepadBody.classList.add('hidden');
+    notepadChevron.textContent = '▼';
+  }
+}
 
 function toggleEditMode() {
   editMode = !editMode;
